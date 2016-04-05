@@ -1,4 +1,4 @@
-package overheadConnection;
+package connection;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -7,25 +7,23 @@ import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import lcp.LcpPacket;
-import udpConnection.Client;
-import udpConnection.UdpUtilities;
+import connection.lcp.LcpPacket;
 
-public class BroadcastConnection implements Runnable {
+public class ConnectionHandler implements Runnable {
 	private InetAddress bcastAddress;
 	private Client UDPClient;
 	private static long HEARTBEATINTERVAL = 10000;
 	
-	public BroadcastConnection() throws IOException {
-		bcastAddress = UdpUtilities.broadcastAddress();
-		int port = UdpUtilities.getBroadcastPort();
-		UDPClient = new Client(bcastAddress, port);
+	public ConnectionHandler() throws IOException {
+		bcastAddress = Utilities.broadcastAddress();
+		int port = Utilities.getBroadcastPort();
+		UDPClient = new Client(port);
 	}
 	
 	public void run() {
 		this.startHeartbeat();
 		while (true) {
-			listenForPackets();
+			handlePackets();
 		}
 	}
 	
@@ -34,13 +32,13 @@ public class BroadcastConnection implements Runnable {
 		timer.schedule(new BeatHeart(this), new Date(), HEARTBEATINTERVAL);
 	}
 	
-	private void listenForPackets() {
+	private void handlePackets() {
 		while (true) {
 			DatagramPacket packet = UDPClient.dequeuePacket(500);
 			if (packet != null) {
 				byte[] data = packet.getData();
 				System.out.println(String.format("From %s, received: %s", 
-						packet.getAddress().getHostAddress(), data.toString()));
+						packet.getAddress().getHostAddress(), new String(data)));
 			}
 		}
 	}
@@ -55,9 +53,9 @@ public class BroadcastConnection implements Runnable {
 	 *
 	 */
 	private class BeatHeart extends TimerTask {
-		private BroadcastConnection berry;
+		private ConnectionHandler berry;
 		
-		public BeatHeart(BroadcastConnection berry) {
+		public BeatHeart(ConnectionHandler berry) {
 			this.berry = berry;
 		}
 		

@@ -1,4 +1,4 @@
-package udpConnection;
+package connection;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -8,18 +8,16 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import lcp.LcpPacket;
+import connection.lcp.LcpPacket;
 
 public class Client {
 	private BlockingQueue<DatagramPacket> packetQueue = new LinkedBlockingQueue<DatagramPacket>();
-	
-	private InetAddress destination;
+
 	private int connectionPort;
 	
 	private DatagramSocket clientSocket = null;
 
-	public Client(InetAddress destination, int port) {
-		this.destination = destination;
+	public Client(int port) {
 		this.connectionPort = port;
 		try {
 			new Thread(new Communicator()).start();
@@ -28,7 +26,7 @@ public class Client {
 	}
 	
 	public Client(InetAddress destination) {
-		this(destination, -1);
+		this(-1);
 	}
 
 	/**
@@ -36,8 +34,8 @@ public class Client {
 	 * use the send(LcpPacket lcpp) method.
 	 * @param data
 	 */
-	public void send(byte[] data) {
-		LcpPacket lcpp = new LcpPacket(destination, connectionPort);
+	public void send(byte[] data, InetAddress destination) {
+		LcpPacket lcpp = new LcpPacket(destination);
 		lcpp.setData(data);
 		send(lcpp);
 	}
@@ -97,9 +95,14 @@ public class Client {
 					DatagramPacket receivePacket = new DatagramPacket(recvBuf, recvBuf.length);
 					clientSocket.receive(receivePacket);
 					
-					System.out.println("Received packet from" + receivePacket.getAddress().getHostAddress());
+					System.out.println("Received packet from " + receivePacket.getAddress().getHostAddress());
 					
-					packetQueue.offer(receivePacket);
+					if (receivePacket.getAddress().getHostAddress()
+							.equals(Utilities.getMyInetAddress().getHostAddress())) {
+						System.out.println("Ignoring my own packet.");
+					} else {
+						packetQueue.offer(receivePacket);
+					}
 				}
 			} catch (IOException e) {
 				System.err.println("Couldn't read socket: " + e.getMessage());

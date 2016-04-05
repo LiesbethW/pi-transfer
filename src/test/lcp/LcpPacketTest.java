@@ -11,7 +11,7 @@ import java.net.InetAddress;
 import org.junit.Before;
 import org.junit.Test;
 
-import lcp.LcpPacket;
+import connection.lcp.LcpPacket;
 
 public class LcpPacketTest {
 	public static String IP = "172.17.2.1";

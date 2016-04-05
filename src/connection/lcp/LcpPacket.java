@@ -1,17 +1,18 @@
-package lcp;
+package connection.lcp;
 
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 
-import udpConnection.UdpUtilities;
+import connection.Utilities;
 
 public class LcpPacket {
 	public static int HEADERLEN = 6;
 	public static int VERSION = 1;
+	public static int DEFAULTPORT = 1929;
 	
 	public static LcpPacket heartbeat() {
-		LcpPacket lcpp = new LcpPacket(UdpUtilities.broadcastAddress(), 
-				UdpUtilities.getBroadcastPort());;
+		LcpPacket lcpp = new LcpPacket(Utilities.broadcastAddress(), 
+				Utilities.getBroadcastPort());;
 		lcpp.setMessage("I'm alive!");
 		return lcpp;
 	}
@@ -26,6 +27,10 @@ public class LcpPacket {
 	public LcpPacket(InetAddress destination, int port) {
 		this.destination = destination;
 		this.destinationPort = port;
+	}
+	
+	public LcpPacket(InetAddress destination) {
+		this(destination, DEFAULTPORT);
 	}
 	
 	public LcpPacket(DatagramPacket packet) {

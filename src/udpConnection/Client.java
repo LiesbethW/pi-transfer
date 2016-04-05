@@ -12,7 +12,7 @@ import lcp.LcpPacket;
 
 public class Client {
 	private BlockingQueue<DatagramPacket> packetQueue = new LinkedBlockingQueue<DatagramPacket>();
-
+	
 	private InetAddress destination;
 	private int connectionPort;
 	
@@ -49,7 +49,7 @@ public class Client {
 	public void send(LcpPacket lcpp) {
 		if (clientSocket != null) {
 			try {
-				clientSocket.send(lcpp.packet());
+				clientSocket.send(lcpp.datagram());
 			} catch (IOException e) {
 				System.err.println("Couldn't write socket: " + e.getMessage());
 			}

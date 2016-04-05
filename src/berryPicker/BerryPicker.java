@@ -2,12 +2,16 @@ package berryPicker;
 
 import java.io.IOException;
 
+import overheadConnection.BroadcastConnection;
+
 public class BerryPicker implements Runnable {
-	private BroadcastBerry berry;
+	private BroadcastConnection broadcastChannel;
 	
 	public BerryPicker() {
 		try {
-			berry = new BroadcastBerry();
+			broadcastChannel = new BroadcastConnection();
+			Thread thread = new Thread(broadcastChannel);
+			thread.start();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

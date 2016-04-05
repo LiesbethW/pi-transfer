@@ -8,7 +8,7 @@ import java.util.Enumeration;
 public class LcpUtilities {
 	public static String IP_RANGE = "172.17.2";
 
-	public static InetAddress getInetAddress() {
+	public static InetAddress getMyInetAddress() {
 		InetAddress myAddress = null;
 		try {
 			Enumeration e = NetworkInterface.getNetworkInterfaces();

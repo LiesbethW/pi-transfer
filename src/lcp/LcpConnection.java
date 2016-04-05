@@ -1,21 +1,23 @@
 package lcp;
 
-import java.net.DatagramSocket;
+import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.net.SocketException;
 
 import connectionState.ConnectionState;
 import connectionState.Established;
 import connectionState.Listening;
+import udpConnection.Client;
 
 public class LcpConnection implements Runnable {
 	
 	private ConnectionState state;
-	private DatagramSocket socket;
+	private Client UDPclient;
 	private InetAddress myIP;
+	private InetAddress otherIP;
 	
-	public LcpConnection() {
-		myIP = LcpUtilities.getInetAddress();
+	public LcpConnection(InetAddress other) {
+		myIP = LcpUtilities.getMyInetAddress();
+		this.otherIP = other;
 		setState(new Listening());
 		this.setup();
 	}
@@ -33,15 +35,20 @@ public class LcpConnection implements Runnable {
 	}
 	
 	private void setup() {
-		try {
-			socket = new DatagramSocket();		
-			if (socket != null) {
-				System.out.println(String.format("Created a connection on port %d, ip %s", 
-						socket.getLocalPort(), socket.getLocalAddress().toString()));
-			}
-		} catch (SocketException e) {
-			e.printStackTrace();
+		UDPclient = new Client(otherIP);
+	}
+	
+	private void send(byte[] data) {
+		UDPclient.send(data);
+	}
+	
+	private DatagramPacket receiveData() {
+		if (UDPclient.hasPackets()) {
+			return UDPclient.dequeuePacket(500);
+		} else {
+			return null;
 		}
+		
 	}
 	
 	private void setState(ConnectionState state) {

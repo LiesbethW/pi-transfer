@@ -1,9 +1,9 @@
-package berryPicker;
+package udpConnection;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-public class BerryUtilities {
+public class UdpUtilities {
 	private static int BCAST_PORT = 1929;
 	public static String BCAST_IP = "172.17.2.255";
 	

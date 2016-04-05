@@ -1,7 +1,6 @@
 package connection;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.util.Date;
 import java.util.Timer;
@@ -34,13 +33,17 @@ public class ConnectionHandler implements Runnable {
 	
 	private void handlePackets() {
 		while (true) {
-			DatagramPacket packet = UDPClient.dequeuePacket(500);
+			LcpPacket packet = UDPClient.dequeuePacket(500);
 			if (packet != null) {
 				byte[] data = packet.getData();
 				System.out.println(String.format("From %s, received: %s", 
-						packet.getAddress().getHostAddress(), new String(data)));
+						packet.getAddress(), new String(data)));
 			}
 		}
+	}
+	
+	public void send(LcpPacket lcpp) {
+
 	}
 	
 	private void sayHello() {

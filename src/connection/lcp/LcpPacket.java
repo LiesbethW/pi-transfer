@@ -21,11 +21,11 @@ public class LcpPacket {
 	private byte[] buffer = new byte[0];
 	private byte[] header = new byte[HEADERLEN];
 	private byte[] data = new byte[0];
-	private InetAddress destination;
+	private InetAddress address;
 	private int destinationPort;
 	
 	public LcpPacket(InetAddress destination, int port) {
-		this.destination = destination;
+		this.address = destination;
 		this.destinationPort = port;
 	}
 	
@@ -41,8 +41,8 @@ public class LcpPacket {
 		System.arraycopy(buffer, HEADERLEN, data, 0, data.length);
 	}
 	
-	public InetAddress getDestination() {
-		return destination;
+	public InetAddress getAddress() {
+		return address;
 	}
 	
 	public int getPort() {
@@ -75,7 +75,7 @@ public class LcpPacket {
 		System.arraycopy(header, 0, buffer, 0, HEADERLEN);
 		System.arraycopy(data, 0, buffer, HEADERLEN, data.length);
 		packet = new DatagramPacket(buffer, buffer.length);
-		packet.setAddress(destination);
+		packet.setAddress(address);
 		packet.setPort(destinationPort);
 		return packet;
 	}

@@ -31,14 +31,14 @@ public class LcpPacketTest {
 	@Test
 	public void testSetUp() {
 		assertNotNull(packet);
-		assertEquals(destination, packet.getDestination());
+		assertEquals(destination, packet.getAddress());
 		assertEquals(port, packet.getPort());
 	}
 	
 	@Test
 	public void testDatagram() {
 		DatagramPacket datagram = packet.datagram();
-		assertEquals(packet.getDestination(), datagram.getAddress());
+		assertEquals(packet.getAddress(), datagram.getAddress());
 		assertEquals(packet.getPort(), datagram.getPort());
 	}
 	

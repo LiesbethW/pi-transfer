@@ -11,8 +11,9 @@ import java.util.concurrent.TimeUnit;
 import connection.lcp.LcpPacket;
 
 public class Client {
-	private BlockingQueue<DatagramPacket> packetQueue = new LinkedBlockingQueue<DatagramPacket>();
-
+	private BlockingQueue<LcpPacket> receivedPacketQueue = new LinkedBlockingQueue<LcpPacket>();
+	private BlockingQueue<LcpPacket> sendPacketQueue = new LinkedBlockingQueue<LcpPacket>();
+	
 	private int connectionPort;
 	
 	private DatagramSocket clientSocket = null;
@@ -34,17 +35,21 @@ public class Client {
 	 * use the send(LcpPacket lcpp) method.
 	 * @param data
 	 */
-	public void send(byte[] data, InetAddress destination) {
+	public void enqueue(byte[] data, InetAddress destination) {
 		LcpPacket lcpp = new LcpPacket(destination);
 		lcpp.setData(data);
-		send(lcpp);
+		enqueue(lcpp);
+	}
+	
+	public void enqueue(LcpPacket lcpp) {
+		sendPacketQueue.add(lcpp);
 	}
 	
 	/**
 	 * Send lcpp packet
 	 * @param lcpp
 	 */
-	public void send(LcpPacket lcpp) {
+	private void send(LcpPacket lcpp) {
 		if (clientSocket != null) {
 			try {
 				clientSocket.send(lcpp.datagram());
@@ -62,11 +67,11 @@ public class Client {
 	 * @param timeout: Try for a limited number of milliseconds.
 	 * @return
 	 */
-	public DatagramPacket dequeuePacket(long timeout) {
-		DatagramPacket packet;
+	public LcpPacket dequeuePacket(long timeout) {
+		LcpPacket packet;
 		
 		try {
-			packet = packetQueue.poll(timeout, TimeUnit.MILLISECONDS);
+			packet = receivedPacketQueue.poll(timeout, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) { 
 			return null; 
 		}
@@ -75,7 +80,7 @@ public class Client {
 	}
 
 	public boolean hasPackets() {
-		return !packetQueue.isEmpty();
+		return !receivedPacketQueue.isEmpty();
 	}
 
 	class Communicator implements Runnable {
@@ -92,16 +97,16 @@ public class Client {
 
 				while (true) {
 					byte[] recvBuf = new byte[15000];
-					DatagramPacket receivePacket = new DatagramPacket(recvBuf, recvBuf.length);
-					clientSocket.receive(receivePacket);
+					DatagramPacket receivedPacket = new DatagramPacket(recvBuf, recvBuf.length);
+					clientSocket.receive(receivedPacket);
 					
-					System.out.println("Received packet from " + receivePacket.getAddress().getHostAddress());
+					System.out.println("Received packet from " + receivedPacket.getAddress().getHostAddress());
 					
-					if (receivePacket.getAddress().getHostAddress()
+					if (receivedPacket.getAddress().getHostAddress()
 							.equals(Utilities.getMyInetAddress().getHostAddress())) {
 						System.out.println("Ignoring my own packet.");
 					} else {
-						packetQueue.offer(receivePacket);
+						receivedPacketQueue.offer(new LcpPacket(receivedPacket));
 					}
 				}
 			} catch (IOException e) {

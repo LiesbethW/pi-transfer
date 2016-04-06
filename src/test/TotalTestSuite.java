@@ -5,7 +5,8 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-  test.lcp.LcpPacketTest.class
+  test.lcp.LcpPacketTest.class,
+  test.piTransfer.FileManagerTest.class
 })
 
 

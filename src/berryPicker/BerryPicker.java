@@ -5,12 +5,12 @@ import java.io.IOException;
 import connection.ConnectionHandler;
 
 public class BerryPicker implements Runnable {
-	private ConnectionHandler broadcastChannel;
+	private ConnectionHandler connectionHandler;
 	
 	public BerryPicker() {
 		try {
-			broadcastChannel = new ConnectionHandler();
-			Thread thread = new Thread(broadcastChannel);
+			connectionHandler = new ConnectionHandler();
+			Thread thread = new Thread(connectionHandler);
 			thread.start();
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -1,22 +1,20 @@
-package lcp;
+package connection.lcp;
 
-import java.net.DatagramPacket;
 import java.net.InetAddress;
 
-import connectionState.ConnectionState;
-import connectionState.Established;
-import connectionState.Listening;
-import udpConnection.Client;
+import connection.Utilities;
+import connection.lcp.state.ConnectionState;
+import connection.lcp.state.Established;
+import connection.lcp.state.Listening;
 
 public class LcpConnection implements Runnable {
 	
 	private ConnectionState state;
-	private Client UDPclient;
 	private InetAddress myIP;
 	private InetAddress otherIP;
 	
 	public LcpConnection(InetAddress other) {
-		myIP = LcpUtilities.getMyInetAddress();
+		myIP = Utilities.getMyInetAddress();
 		this.otherIP = other;
 		setState(new Listening());
 		this.setup();
@@ -35,19 +33,6 @@ public class LcpConnection implements Runnable {
 	}
 	
 	private void setup() {
-		UDPclient = new Client(otherIP);
-	}
-	
-	private void send(byte[] data) {
-		UDPclient.send(data);
-	}
-	
-	private DatagramPacket receiveData() {
-		if (UDPclient.hasPackets()) {
-			return UDPclient.dequeuePacket(500);
-		} else {
-			return null;
-		}
 		
 	}
 	

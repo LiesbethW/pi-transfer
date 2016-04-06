@@ -21,9 +21,18 @@ public class Client {
 	public Client(int port) {
 		this.connectionPort = port;
 		try {
-			new Thread(new Communicator()).start();
+			if (connectionPort != -1) {
+				clientSocket = new DatagramSocket(connectionPort);
+			} else {
+				clientSocket = new DatagramSocket();
+				connectionPort = clientSocket.getLocalPort();
+			}
+			new Thread(new PacketReceiver()).start();
+			new Thread(new PacketSender()).start();
 			Thread.sleep(100); // Give the communicator a chance
-		} catch (InterruptedException e) { }
+		} catch (IOException | InterruptedException e) { 
+			e.printStackTrace();
+		}
 	}
 	
 	public Client(InetAddress destination) {
@@ -83,16 +92,9 @@ public class Client {
 		return !receivedPacketQueue.isEmpty();
 	}
 
-	class Communicator implements Runnable {
+	class PacketReceiver implements Runnable {
 		public void run() {
 			try {
-				if (connectionPort != -1) {
-					clientSocket = new DatagramSocket(connectionPort);
-				} else {
-					clientSocket = new DatagramSocket();
-					connectionPort = clientSocket.getLocalPort();
-				}
-				
 //				clientSocket.setSoTimeout(60 * 1000);
 
 				while (true) {
@@ -118,4 +120,34 @@ public class Client {
 			System.err.println("Communicator stopped!");
 		}
 	}
+	
+	class PacketSender implements Runnable {
+		public void run() {
+			try {
+//				clientSocket.setSoTimeout(60 * 1000);
+
+				while (true) {
+					LcpPacket packet = null;
+					long timeout = 500;
+					
+					try {
+						packet = sendPacketQueue.poll(timeout, TimeUnit.MILLISECONDS);
+					} catch (InterruptedException e) { 
+						e.printStackTrace();
+					}
+					
+					if (packet != null) {
+						clientSocket.send(packet.datagram());
+					}
+					
+				}
+			} catch (IOException e) {
+				System.err.println("Couldn't write to socket: " + e.getMessage());
+			} finally {
+				clientSocket.close();
+			}
+
+			System.err.println("Communicator stopped!");
+		}
+	}	
 }

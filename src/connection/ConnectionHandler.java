@@ -43,11 +43,11 @@ public class ConnectionHandler implements Runnable {
 	}
 	
 	public void send(LcpPacket lcpp) {
-
+		UDPClient.enqueue(lcpp);
 	}
 	
 	private void sayHello() {
-		UDPClient.send(LcpPacket.heartbeat());
+		this.send(LcpPacket.heartbeat());
 	}
 	
 	/**

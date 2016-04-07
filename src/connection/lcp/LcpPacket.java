@@ -65,8 +65,8 @@ public class LcpPacket implements Protocol {
 		setFlag(SYN);
 	}
 
-	public void syn() {
-		return header[1].equals(SYN);
+	public boolean syn() {
+		return (header[1]^SYN) == 0;
 	}
 	
 	public void setFlag(int flag) {

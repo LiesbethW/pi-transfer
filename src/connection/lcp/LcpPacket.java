@@ -2,18 +2,23 @@ package connection.lcp;
 
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.zip.CRC32;
 
 import connection.Utilities;
 
 public class LcpPacket implements Protocol {
-	public static int HEADERLEN = 6;
+	public static int HEADERLEN = 14;
 	public static int VERSION = 1;
 	public static int DEFAULTPORT = 1929;
+	
+	private static CRC32 checksumCalculator = new CRC32();
 	
 	public static LcpPacket heartbeat() {
 		LcpPacket lcpp = new LcpPacket(Utilities.broadcastAddress(), 
 				Utilities.getBroadcastPort());;
 		lcpp.setMessage("I'm alive!");
+		lcpp.setFlag(HEARTBEAT);
 		return lcpp;
 	}
 	
@@ -25,8 +30,7 @@ public class LcpPacket implements Protocol {
 	private int destinationPort;
 	
 	public LcpPacket(InetAddress destination, int port) {
-		this.address = destination;
-		this.destinationPort = port;
+		this.setDestination(destination, port);
 	}
 	
 	public LcpPacket(InetAddress destination) {
@@ -61,24 +65,34 @@ public class LcpPacket implements Protocol {
 		return new String(getData());
 	}
 	
+	public InetAddress getSource() {
+		try {
+			String ip = String.format("%s.%d", Utilities.IP_RANGE, (int) 0xff & header[2]);
+			return InetAddress.getByName(ip);
+		} catch (UnknownHostException e) {
+			return null;
+		}
+	}
+	
 	public void setSyn() {
 		setFlag(SYN);
 	}
 
 	public boolean syn() {
-		return (header[1]^SYN) == 0;
-	}
-	
-	public void setFlag(int flag) {
-		setFlag((byte) flag);
+		return (header[FLAG_FIELD]^SYN) == 0;
 	}
 	
 	public void setFlag(byte flag) {
-		header[1] = flag;
+		header[FLAG_FIELD] = flag;
+	}
+	
+	public void setSource() {
+		header[SOURCE_FIELD] = Utilities.getMyInetAddress().getAddress()[3];
 	}
 	
 	public void setDestination(InetAddress destination, int port) {
 		this.address = destination;
+		header[3] = address.getAddress()[3];
 		if (port != -1) {
 			this.destinationPort = port;
 		} else {
@@ -96,9 +110,13 @@ public class LcpPacket implements Protocol {
 	
 	public DatagramPacket datagram() {
 		setVersion();
+		
+		// Make sure all header bytes and the like have been set before this
 		buffer = new byte[HEADERLEN + data.length];
 		System.arraycopy(header, 0, buffer, 0, HEADERLEN);
 		System.arraycopy(data, 0, buffer, HEADERLEN, data.length);
+		setChecksum();
+		
 		packet = new DatagramPacket(buffer, buffer.length);
 		packet.setAddress(address);
 		packet.setPort(destinationPort);
@@ -107,6 +125,41 @@ public class LcpPacket implements Protocol {
 	
 	private void setVersion() {
 		header[0] = (byte) VERSION;
+	}
+	
+	public boolean checkChecksum() {
+		long sentChecksum = getChecksum();
+		cleanChecksumValue();
+		checksumCalculator.reset();
+		checksumCalculator.update(buffer);
+		long checksum = checksumCalculator.getValue();
+		return sentChecksum == checksumCalculator.getValue();
+	}
+	
+	private long getChecksum() {
+		byte[] checksumBytes = new byte[Long.BYTES];
+		System.arraycopy(buffer, PACKET_CHECKSUM_FIELD, checksumBytes, 0, checksumBytes.length);
+		return ByteUtils.bytesToLong(checksumBytes);
+	}
+	
+	private void setChecksum() {
+		// Set the checksum field to 0 to compute the checksum over the
+		// 'clean' packet
+		cleanChecksumValue();
+		
+		checksumCalculator.reset();
+		checksumCalculator.update(buffer);
+		long checksum = checksumCalculator.getValue();
+		setChecksumField(checksum);
+	}
+	
+	private void cleanChecksumValue() {
+		setChecksumField(0);
+	}
+	
+	private void setChecksumField(long checksum) {
+		byte[] checksumBytes = ByteUtils.longToBytes(checksum);
+		System.arraycopy(checksumBytes, 0, buffer, PACKET_CHECKSUM_FIELD, checksumBytes.length);
 	}
 
 }

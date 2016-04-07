@@ -40,10 +40,9 @@ public class FileObjectTest {
 		double smallerPackets = contentLength/2.5;
 		assertEquals(3, fileObject.numberOfParts((int) smallerPackets));
 		
-		// Cannot get good info when bytes per part is not set
-		assertEquals(0, fileObject.getBytesPerPart());
-		assertEquals(0, fileObject.numberOfParts());
-		assertEquals(null, fileObject.getPart(1));
+		// When the length is not specifically set, it is set to the default
+		assertEquals(fileObject.DEFAULT_LENGTH, fileObject.getBytesPerPart());
+		assertEquals(1, fileObject.numberOfParts());
 		
 		// Set the number of bytes per part
 		fileObject.setBytesPerPart((int) smallerPackets);

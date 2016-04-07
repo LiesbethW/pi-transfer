@@ -3,10 +3,12 @@ package berryPicker;
 import java.net.InetAddress;
 
 public class FileObject {
+	public static int DEFAULT_LENGTH = 1444;
+	
 	private String name;
 	private byte[] content;
 	private InetAddress destination;
-	private int bytesPerPart = 0;
+	private int bytesPerPart = DEFAULT_LENGTH;
 	
 	public FileObject(byte[] content, String name) {
 		setContent(content);

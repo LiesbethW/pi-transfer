@@ -5,7 +5,7 @@ import java.net.InetAddress;
 
 import connection.Utilities;
 
-public class LcpPacket {
+public class LcpPacket implements Protocol {
 	public static int HEADERLEN = 6;
 	public static int VERSION = 1;
 	public static int DEFAULTPORT = 1929;
@@ -33,6 +33,10 @@ public class LcpPacket {
 		this(destination, DEFAULTPORT);
 	}
 	
+	public LcpPacket() {
+		
+	}
+	
 	public LcpPacket(DatagramPacket packet) {
 		this(packet.getAddress(), packet.getPort());
 		buffer = packet.getData();
@@ -57,8 +61,29 @@ public class LcpPacket {
 		return new String(getData());
 	}
 	
+	public void setSyn() {
+		setFlag(SYN);
+	}
+
+	public void syn() {
+		return header[1].equals(SYN);
+	}
+	
 	public void setFlag(int flag) {
-		header[1] = (byte) flag;
+		setFlag((byte) flag);
+	}
+	
+	public void setFlag(byte flag) {
+		header[1] = flag;
+	}
+	
+	public void setDestination(InetAddress destination, int port) {
+		this.address = destination;
+		if (port != -1) {
+			this.destinationPort = port;
+		} else {
+			this.destinationPort = DEFAULTPORT;
+		}
 	}
 	
 	public void setMessage(String message) throws java.lang.ArrayIndexOutOfBoundsException {

@@ -35,6 +35,15 @@ public class Utilities {
 		return myAddress;
 	}
 	
+	public static InetAddress getInetAddressEndingWith(int id) {
+		String host = String.join(".", IP_RANGE, String.valueOf(id));
+		try {
+			return InetAddress.getByName(host);
+		} catch (UnknownHostException e) {
+			return null;
+		}
+	}
+	
 	public static int getBroadcastPort() {
 		return BCAST_PORT;
 	}

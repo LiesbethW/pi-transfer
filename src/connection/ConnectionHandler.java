@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import berryPicker.FileObject;
+import connection.lcp.LcpConnection;
 import connection.lcp.LcpPacket;
 
 public class ConnectionHandler implements Runnable {
@@ -26,6 +28,11 @@ public class ConnectionHandler implements Runnable {
 		}
 	}
 	
+	public void transmitFile(FileObject file) {
+		Thread lcpThread = new Thread(new LcpConnection(this, file));
+		lcpThread.start();
+	}
+	
 	private void startHeartbeat() {
 		Timer timer = new Timer();
 		timer.schedule(new BeatHeart(this), new Date(), HEARTBEATINTERVAL);
@@ -42,7 +49,7 @@ public class ConnectionHandler implements Runnable {
 		}
 	}
 	
-	public void send(LcpPacket lcpp) {
+	private void send(LcpPacket lcpp) {
 		UDPClient.enqueue(lcpp);
 	}
 	

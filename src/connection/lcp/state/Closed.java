@@ -3,9 +3,9 @@ package connection.lcp.state;
 import connection.lcp.LcpConnection;
 import connection.lcp.LcpPacket;
 
-public class Listening extends AbstractConnectionState {
-	
-	public Listening(LcpConnection connection) {
+public class Closed extends AbstractConnectionState {
+
+	public Closed(LcpConnection connection) {
 		super(connection);
 	}
 	

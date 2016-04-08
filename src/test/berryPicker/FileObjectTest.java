@@ -12,7 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import berryPicker.FileObject;
-import piTransfer.FileManager;
+import piTransfer.FileHelper;
 
 public class FileObjectTest {
 	private String fullFileName = "/Users/liesbeth.wijers/Desktop/input.txt";
@@ -23,7 +23,7 @@ public class FileObjectTest {
 	@Before
 	public void setUp() {
 		file = new File(fullFileName);
-		fileObject = new FileObject(FileManager.getFileContents(fullFileName), fileName);
+		fileObject = new FileObject(FileHelper.getFileContents(fullFileName), fileName);
 	}
 	
 	@Test

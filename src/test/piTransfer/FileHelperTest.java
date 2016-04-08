@@ -10,21 +10,21 @@ import java.util.ArrayList;
 import org.junit.After;
 import org.junit.Test;
 
-import piTransfer.FileManager;
+import piTransfer.FileHelper;
 
-public class FileManagerTest {
+public class FileHelperTest {
 	private String input = "/Users/liesbeth.wijers/Desktop/input.txt";
 	private String output = "output.txt";
 	private byte[] fileContents;
 	
 	@Test
 	public void testReadingAndWriting() {
-		fileContents = FileManager.getFileContents(input);
+		fileContents = FileHelper.getFileContents(input);
 		assertNotNull(fileContents);
-		File result = new File(FileManager.FILE_DIR + File.separator + output);
+		File result = new File(FileHelper.FILE_DIR + File.separator + output);
 		System.out.println(result.getAbsolutePath());
 		assertFalse(result.length() > 0);
-		FileManager.writeFileContents(fileContents, output);
+		FileHelper.writeFileContents(fileContents, output);
 		assertTrue(result.length() > 0);
 	}
 	
@@ -32,7 +32,7 @@ public class FileManagerTest {
 	public void testGetFileNames() {
 		int dummyFilesAmount = 5;
 		generateDummyFiles(dummyFilesAmount);
-		ArrayList<String> fileNames = FileManager.getFileNames();
+		ArrayList<String> fileNames = FileHelper.getFileNames();
 		assertTrue(fileNames.size() >= dummyFilesAmount);
 		assertTrue(fileNames.contains("dummy_file_0.txt"));
 		System.out.println(fileNames.toString());
@@ -43,13 +43,13 @@ public class FileManagerTest {
 		byte[] content = "Hello You!".getBytes();
 		for (int i = 0; i < fileNames.length; i++) {
 			fileNames[i] = String.format("dummy_file_%d.txt", i);
-			FileManager.writeFileContents(content, fileNames[i]);
+			FileHelper.writeFileContents(content, fileNames[i]);
 		}
 	}
 	
 	@After
 	public void setUp() {
-		File result = new File(FileManager.FILE_DIR + File.separator + output);
+		File result = new File(FileHelper.FILE_DIR + File.separator + output);
 		result.delete();
 	}
 	

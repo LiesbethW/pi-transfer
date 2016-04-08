@@ -6,7 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class FileManager {
+public class FileHelper {
 	public static String FILE_DIR = "files";
 	
 	/**
@@ -73,7 +73,7 @@ public class FileManager {
 	public static ArrayList<String> getFileNames() {
 		ArrayList<String> fileNames = new ArrayList<String>();
 		
-		File folder = new File(FileManager.FILE_DIR);
+		File folder = new File(FileHelper.FILE_DIR);
 		File[] files = folder.listFiles();
 		for (int i = 0; i < files.length; i++) {
 			fileNames.add(files[i].getName());

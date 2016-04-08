@@ -2,6 +2,7 @@ package berryPicker;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -54,6 +55,10 @@ public class BerryPicker implements Runnable, Transmitter {
 	public byte[] downloadFile(String filename) {
 		// TO DO
 		return "The amazing content of your file.".getBytes();
+	}
+	
+	public ArrayList<String> listRemoteFiles() {
+		return new ArrayList<String>();
 	}
 	
 	private InetAddress getBerryById(int berryId) {

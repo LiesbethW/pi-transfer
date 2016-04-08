@@ -3,7 +3,7 @@ package berryPicker;
 import java.net.InetAddress;
 
 public class FileObject {
-	public static int DEFAULT_LENGTH = 1444;
+	public static int DEFAULT_LENGTH = 1443;
 	
 	private String name;
 	private byte[] content;

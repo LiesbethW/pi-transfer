@@ -6,8 +6,9 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
   test.lcp.LcpPacketTest.class,
-  test.piTransfer.FileManagerTest.class,
-  test.berryPicker.FileObjectTest.class
+  test.piTransfer.FileHelperTest.class,
+  test.berryPicker.FileObjectTest.class,
+  test.lcp.ByteUtilsTest.class
 })
 
 

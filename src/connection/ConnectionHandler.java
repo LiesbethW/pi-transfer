@@ -42,9 +42,8 @@ public class ConnectionHandler implements Runnable {
 		while (true) {
 			LcpPacket packet = UDPClient.dequeuePacket(500);
 			if (packet != null) {
-				byte[] data = packet.getData();
 				System.out.println(String.format("From %s, received: %s", 
-						packet.getAddress(), new String(data)));
+						packet.getAddress(), packet.getMessage()));
 			}
 		}
 	}

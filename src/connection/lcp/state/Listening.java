@@ -1,12 +1,13 @@
 package connection.lcp.state;
 
+import berryPicker.FileObject;
 import connection.lcp.LcpConnection;
 import connection.lcp.LcpPacket;
 
 public class Listening extends AbstractConnectionState {
 	
-	public Listening(LcpConnection connection) {
-		super(connection);
+	public Listening(LcpConnection connection, FileObject fileObject) {
+		super(connection, fileObject);
 	}
 	
 	public ConnectionState digest(LcpPacket lcpp) {

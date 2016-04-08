@@ -8,9 +8,6 @@ import java.util.zip.CRC32;
 import connection.Utilities;
 
 public class LcpPacket implements Protocol {
-	public static int HEADERLEN = 14;
-	public static int VERSION = 1;
-	public static int DEFAULTPORT = 1929;
 	
 	private static CRC32 checksumCalculator = new CRC32();
 	

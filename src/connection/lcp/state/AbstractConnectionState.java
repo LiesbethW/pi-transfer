@@ -2,16 +2,19 @@ package connection.lcp.state;
 
 import java.util.HashMap;
 
+import berryPicker.FileObject;
 import connection.lcp.LcpConnection;
 import connection.lcp.LcpPacket;
 import connection.lcp.commands.Command;
 
 public abstract class AbstractConnectionState implements ConnectionState {
 	protected LcpConnection connection;
+	protected FileObject fileObject;
 	protected HashMap<ConnectionState, Command> transitionMap;
 	
-	public AbstractConnectionState(LcpConnection connection) {
+	public AbstractConnectionState(LcpConnection connection, FileObject fileObject) {
 		this.connection = connection;
+		this.fileObject = fileObject;
 		initializeTransitionMap();
 	}
 	

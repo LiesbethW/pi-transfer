@@ -15,9 +15,14 @@ public class FileController implements FileStore {
 		String filename = String.format("example_file_%d.txt", (int) (Math.random()*10000));
 		byte[] fileContents = "My super duper file content.".getBytes();
 		piTransfer.save(fileContents, filename);
+		String filePath = String.join(File.separator, FileHelper.FILE_DIR, filename);
 		
 		// Upload that file
-		piTransfer.upload(String.join(File.separator, FileHelper.FILE_DIR, filename));
+		piTransfer.upload(filePath);
+		
+		// Clean up the file afterwards
+		File file = new File(filePath);
+		file.delete();
 	}
 	
 	private Transmitter transmitter;

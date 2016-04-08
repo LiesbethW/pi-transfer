@@ -13,7 +13,9 @@ import java.net.UnknownHostException;
 import org.junit.Before;
 import org.junit.Test;
 
+import berryPicker.FileObject;
 import connection.lcp.LcpPacket;
+import connection.lcp.Protocol;
 
 public class LcpPacketTest {
 	public static String IP = "172.17.2.1";
@@ -22,12 +24,14 @@ public class LcpPacketTest {
 	private LcpPacket packet;
 	private InetAddress destination;
 	private int port;
+	private FileObject fileObject;
 	
 	@Before
 	public void setUp() throws IOException {
 		destination = InetAddress.getByName(IP);
 		port = PORT;
 		packet = new LcpPacket(destination, port);
+		fileObject = new FileObject("Hello, World!".getBytes(), "my_file.txt");
 	}
 	
 	@Test
@@ -76,8 +80,19 @@ public class LcpPacketTest {
 	@Test
 	public void testSettingSynFlag() {
 		assertFalse(packet.syn());
-		packet.setSyn();
+		packet.setSyn(fileObject);
+		assertEquals(packet.getFlag(), Protocol.SYN);
 		assertTrue(packet.syn());
+	}
+	
+	@Test
+	public void testPacketType() {
+		packet.setSyn(fileObject);
+		assertTrue(packet.fileTransferPacket());
+		packet.setFlag(Protocol.FILE_REQUEST);
+		assertFalse(packet.fileTransferPacket());
+		packet.setFlag(Protocol.HEARTBEAT);
+		assertFalse(packet.fileTransferPacket());
 	}
 	
 	@Test
@@ -85,6 +100,17 @@ public class LcpPacketTest {
 		assertEquals(InetAddress.getByName("172.17.2.0"), packet.getSource());
 		packet.setSource();
 		assertEquals(InetAddress.getByName("172.17.2.12"), packet.getSource());
+	}
+	
+	@Test
+	public void testSerializingOptions() {
+		packet.setSyn(fileObject);
+		packet.setSource();
+		DatagramPacket datagram = packet.datagram();
+		LcpPacket receivedPacket = new LcpPacket(datagram);
+		receivedPacket.print();
+		assertNotNull(receivedPacket.getFileName());
+		assertNotNull(receivedPacket.getFileChecksum());
 	}
 	
 }

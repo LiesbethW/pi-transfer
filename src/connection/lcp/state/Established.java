@@ -10,8 +10,8 @@ public class Established extends AbstractConnectionState {
 		super(connection, fileObject);
 	}
 	
-	public ConnectionState digest(LcpPacket lcpp) {
-		return this;
+	public Class<? extends AbstractConnectionState> digest(LcpPacket lcpp) {
+		return this.getClass();
 	}
 
 	@Override
@@ -19,4 +19,5 @@ public class Established extends AbstractConnectionState {
 		// TODO Auto-generated method stub
 		
 	}
+
 }

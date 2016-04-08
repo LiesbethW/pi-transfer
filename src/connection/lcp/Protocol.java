@@ -15,14 +15,25 @@ public interface Protocol {
 	public static int SEQUENCE_NUMBER = 14;
 	
 	// FLAGS
-	public static byte SYN = 1;
-	public static byte ACK = 2;
-	public static byte SYN_ACK = 4;
-	public static byte FIN = 8;
-	public static byte FIN_ACK = 10;
-	public static byte FILE_PART = 16;
-	public static byte FILE_REQUEST = 32;
-	public static byte NEGOTIATION = 64;
-	public static byte HEARTBEAT = (byte) 255;
+	public static int SYN = 1;
+	public static int ACK = 2;
+	public static int SYN_ACK = 4;
+	public static int FIN = 8;
+	public static int FIN_ACK = 10;
+	public static int FILE_PART = 16;
+	public static int FILE_REQUEST = 32;
+	public static int NEGOTIATION = 64;
+	public static int HEARTBEAT = 255;
+	
+	// delimiters
+	public static String DELIMITER = "\n";
+	public static String DELIMITER2 = ":";
+	
+	// option strings
+	public static String FILENAME = "FILENAME";
+	public static String TOTAL_LENGTH = "TOTAL_LENGTH";
+	public static String FILE_CHECKSUM = "FILE_CHECKSUM";
+	public static String WINDOWSIZE = "WINDOWSIZE";
+	public static String ENCRYPTION = "ENCRYPTION";
 	
 }

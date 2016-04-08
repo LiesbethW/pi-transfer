@@ -48,7 +48,7 @@ public class ConnectionHandler implements Runnable {
 		}
 	}
 	
-	private void send(LcpPacket lcpp) {
+	public void send(LcpPacket lcpp) {
 		UDPClient.enqueue(lcpp);
 	}
 	

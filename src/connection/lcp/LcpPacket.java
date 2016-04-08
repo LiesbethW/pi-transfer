@@ -3,8 +3,10 @@ package connection.lcp;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.zip.CRC32;
 
+import berryPicker.FileObject;
 import connection.Utilities;
 
 public class LcpPacket implements Protocol {
@@ -15,7 +17,7 @@ public class LcpPacket implements Protocol {
 		LcpPacket lcpp = new LcpPacket(Utilities.broadcastAddress(), 
 				Utilities.getBroadcastPort());;
 		lcpp.setMessage("I'm alive!");
-		lcpp.setFlag(HEARTBEAT);
+		lcpp.setHeartbeat();
 		return lcpp;
 	}
 	
@@ -25,6 +27,8 @@ public class LcpPacket implements Protocol {
 	private byte[] data = new byte[0];
 	private InetAddress address;
 	private int destinationPort;
+	
+	private HashMap<String, String> options = new HashMap<String, String>();
 	
 	public LcpPacket(InetAddress destination, int port) {
 		this.setDestination(destination, port);
@@ -44,6 +48,7 @@ public class LcpPacket implements Protocol {
 		data = new byte[buffer.length - HEADERLEN];
 		System.arraycopy(buffer, 0, header, 0, HEADERLEN);
 		System.arraycopy(buffer, HEADERLEN, data, 0, data.length);
+		this.deSerializeMessage();
 	}
 	
 	public InetAddress getAddress() {
@@ -71,16 +76,112 @@ public class LcpPacket implements Protocol {
 		}
 	}
 	
-	public void setSyn() {
-		setFlag(SYN);
-	}
-
-	public boolean syn() {
-		return (header[FLAG_FIELD]^SYN) == 0;
+	public int getFlag() {
+		return header[FLAG_FIELD] & 0xff;
 	}
 	
-	public void setFlag(byte flag) {
-		header[FLAG_FIELD] = flag;
+	public boolean fileTransferPacket() {
+		return getFlag() < FILE_REQUEST;
+	}
+	
+	public boolean syn() {
+		return getFlag() == SYN;
+	}
+	
+	public boolean synAck() {
+		return getFlag() == SYN_ACK;
+	}
+	
+	public boolean ack() {
+		return getFlag() == ACK;
+	}
+	
+	public boolean fin() {
+		return getFlag() == FIN;
+	}
+	
+	public boolean finAck() {
+		return getFlag() == FIN_ACK;
+	}
+	
+	public boolean fileRequest() {
+		return getFlag() == FILE_REQUEST;
+	}
+	
+	public boolean isHeartbeat() {
+		return getFlag() == HEARTBEAT;
+	}
+	
+	public short getVCID() {
+		byte[] vcid = new byte[Short.BYTES];
+		System.arraycopy(header, VCID_FIELD, vcid, 0, Short.BYTES);
+		return ByteUtils.bytesToShort(vcid);
+	}
+	
+	public String getFileName() {
+		if (options.containsKey(FILENAME)) {
+			return options.get(FILENAME);
+		} else {
+			return null;
+		}
+	}
+	
+	public long getFileChecksum() {
+		if (options.containsKey(FILE_CHECKSUM)) {
+			return Long.valueOf(options.get(FILE_CHECKSUM));
+		} else {
+			return 0;
+		}
+	}
+	
+	public int getTotalLength() {
+		if (options.containsKey(TOTAL_LENGTH)) {
+			return Integer.valueOf(options.get(TOTAL_LENGTH));
+		} else {
+			return 0;
+		}
+	}
+	
+	public void setSyn(FileObject file) {
+		setFlag(SYN);
+		setMessage(serializeFileInfo(file));
+	}
+	
+	public void setSynAck() {
+		setFlag(SYN_ACK);
+	}
+	
+	public void setAck() {
+		setFlag(ACK);
+	}
+	
+	public void setFin() {
+		setFlag(FIN);
+	}
+	
+	public void setFinAck() {
+		setFlag(FIN_ACK);
+	}
+	
+	public void setFilePart() {
+		setFlag(FILE_PART);
+	}
+	
+	public void setFileRequest() {
+		setFlag(FILE_REQUEST);
+	}
+	
+	public void setHeartbeat() {
+		setFlag(HEARTBEAT);
+	}
+	
+	public void setVCID(short vcID) {
+		byte[] virtualCircuitID = ByteUtils.shortToBytes(vcID);
+		System.arraycopy(virtualCircuitID, 0, header, VCID_FIELD, virtualCircuitID.length);
+	}
+	
+	public void setFlag(int flag) {
+		header[FLAG_FIELD] = (byte) flag;
 	}
 	
 	public void setSource() {
@@ -89,7 +190,7 @@ public class LcpPacket implements Protocol {
 	
 	public void setDestination(InetAddress destination, int port) {
 		this.address = destination;
-		header[3] = address.getAddress()[3];
+		header[DESTINATION_FIELD] = address.getAddress()[3];
 		if (port != -1) {
 			this.destinationPort = port;
 		} else {
@@ -157,6 +258,39 @@ public class LcpPacket implements Protocol {
 	private void setChecksumField(long checksum) {
 		byte[] checksumBytes = ByteUtils.longToBytes(checksum);
 		System.arraycopy(checksumBytes, 0, buffer, PACKET_CHECKSUM_FIELD, checksumBytes.length);
+	}
+	
+	private String serializeFileInfo(FileObject file) {
+		String fileName = String.join(DELIMITER2, FILENAME, file.getName());
+		String totalLength = String.join(DELIMITER2, TOTAL_LENGTH, String.valueOf(file.getLength()));
+		checksumCalculator.reset();
+		checksumCalculator.update(file.getContent());
+		long checksum = checksumCalculator.getValue();
+		String fileChecksum = String.join(DELIMITER2, FILE_CHECKSUM, String.valueOf(checksum));
+		return String.join(DELIMITER, fileName, totalLength, fileChecksum);		
+	}
+	
+	private void deSerializeMessage() {
+		String[] info = getMessage().split(DELIMITER);
+		for (int i = 0; i < info.length; i++) {
+			String[] keyValuePair = info[i].split(DELIMITER2, 2);
+			if (keyValuePair.length >= 2) {
+				options.put(keyValuePair[0], keyValuePair[1]);
+			} else {
+				options.put(keyValuePair[0], null);
+			}
+		}
+	}
+	
+	public void print() {
+		System.out.println("-----------PACKET------------");
+		System.out.println("-----------HEADER------------");
+		System.out.format("Flag: %d\n", this.getFlag());
+		System.out.format("Destination: %x\n", header[DESTINATION_FIELD]);
+		System.out.format("Source: %s\n", this.getSource().toString());
+		System.out.format("VCID: %d\n", this.getVCID());
+		System.out.println("-----------CONTENT-----------");
+		System.out.println(this.getMessage());
 	}
 
 }

@@ -1,46 +1,56 @@
 package connection.lcp;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 
 import berryPicker.FileObject;
 import connection.ConnectionHandler;
 import connection.Utilities;
+import connection.lcp.state.AbstractConnectionState;
+import connection.lcp.state.Closed;
 import connection.lcp.state.ConnectionState;
 import connection.lcp.state.Established;
+import connection.lcp.state.Initialized;
+import connection.lcp.state.SynReceived;
+import connection.lcp.state.SynSent;
 
 public class LcpConnection implements Runnable {
+	private static ArrayList<Class<? extends AbstractConnectionState> > stateList =
+			new ArrayList<>(Arrays.asList(Initialized.class, SynSent.class, SynReceived.class,
+					Established.class, Closed.class));
 	
 	// LCP Connection attributes
 	private ConnectionHandler handler;
 	private ConnectionState state;
 	private InetAddress myIP;
 	private InetAddress otherIP;
-	private byte[] dataToSend;
-	private String fileName;
+	private FileObject file;
+	private short virtualCircuitID;
 	
 	// States
-	private ConnectionState closed;
-	private ConnectionState listening;
-	private ConnectionState established;
+	private HashMap<Class<? extends AbstractConnectionState>, AbstractConnectionState> states;
 	
 	public LcpConnection(ConnectionHandler handler, FileObject file) {
 		myIP = Utilities.getMyInetAddress();
 		this.handler = handler;
 		this.otherIP = file.getDestination();
-		this.dataToSend = file.getContent();
-		this.fileName = file.getName();
+		this.file = file;
 		initializeStates();
-		setState(closed);
+		setState(Initialized.class);
 	}
 	
 	public void run() {
 		// DO SOMETHING
 	}
 	
-	public void sendThis(LcpPacket lcpp) {
-		if (lcpp.getAddress() == null) {
-			lcpp.setDestination(otherIP, -1);
-		}
+	public void completeAndSendPacket(LcpPacket lcpp) {
+		lcpp.setSource();
+		lcpp.setDestination(otherIP, -1);
+		lcpp.setVCID(virtualCircuitID);
+		handler.send(lcpp);
 	}
 	
 	public boolean isEstablished() {
@@ -55,23 +65,22 @@ public class LcpConnection implements Runnable {
 		setState(getState().digest(lcpp));
 	}
 	
-	private void setState(ConnectionState state) {
-		this.state = state;
+	private void setState(Class<? extends ConnectionState> stateClass) {
+		this.state = states.get(stateClass);
 	}
 	
 	private void initializeStates() {
-//		newClient = new NewClient(this);
-//		readyToPlay = new ReadyToPlay(this);
-//		waitingForOpponent = new WaitingForOpponent(this);
-//		waitForChallengeResponse = new WaitForChallengeResponse(this);
-//		challenged = new Challenged(this);
-//		startPlaying = new StartPlaying(this);
-//		playing = new Playing(this);
-//		
-//		HashSet<State> activeStates = new HashSet<>();
-//		activeStates.addAll(Arrays.asList(readyToPlay, waitingForOpponent, 
-//				waitForChallengeResponse, challenged, startPlaying, playing));
-		
+		states = new HashMap<Class<? extends AbstractConnectionState>, AbstractConnectionState>();
+		for (int i = 0; i < stateList.size(); i++) {
+			Class<? extends AbstractConnectionState> stateClass = stateList.get(i);
+			try {
+				AbstractConnectionState state = (AbstractConnectionState) (stateClass.getConstructors()[0]).newInstance(this, file);
+				states.put(stateClass, state);
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException | SecurityException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	

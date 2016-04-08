@@ -4,9 +4,9 @@ import berryPicker.FileObject;
 import connection.lcp.LcpConnection;
 import connection.lcp.LcpPacket;
 
-public class Established extends AbstractConnectionState {
-	
-	public Established(LcpConnection connection, FileObject fileObject) {
+public class Closed extends AbstractConnectionState {
+
+	public Closed(LcpConnection connection, FileObject fileObject) {
 		super(connection, fileObject);
 	}
 	

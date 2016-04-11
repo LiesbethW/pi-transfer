@@ -2,6 +2,7 @@ package connection;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Random;
@@ -45,6 +46,10 @@ public class ConnectionHandler implements Runnable {
 		lcpThread.start();
 	}
 	
+	public void requestFile(String filename) {
+		
+	}
+	
 	private void startHeartbeat() {
 		Timer timer = new Timer();
 		timer.schedule(new BeatHeart(this), new Date(), HEARTBEATINTERVAL);
@@ -55,6 +60,15 @@ public class ConnectionHandler implements Runnable {
 			LcpPacket packet = UDPClient.dequeuePacket(500);
 			if (packet != null) {
 				packet.print();
+				
+				if (packet.isHeartbeat()) {
+					int berryId = packet.getSourceId();
+					Date timestamp = packet.getTimestamp();
+					ArrayList<String> files = packet.getFileList();
+					transmitter.processHeartbeat(berryId, timestamp, files);
+				}
+				
+				
 			}
 		}
 	}
@@ -85,7 +99,9 @@ public class ConnectionHandler implements Runnable {
 	}
 	
 	private void sayHello() {
-		this.send(LcpPacket.heartbeat());
+		LcpPacket heartbeat = new LcpPacket();
+		heartbeat.setHeartbeat(transmitter.listLocalFiles());
+		this.send(heartbeat);
 	}
 	
 	private short generateVCID() {

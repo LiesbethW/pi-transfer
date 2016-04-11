@@ -37,8 +37,10 @@ public class LcpConnection implements Runnable {
 	public LcpConnection(ConnectionHandler handler, FileObject file, short virtualCircuitID) {
 		myIP = Utilities.getMyInetAddress();
 		this.handler = handler;
-		this.otherIP = file.getDestination();
-		this.file = file;
+		if (file != null) {
+			this.otherIP = file.getDestination();
+			this.file = file;
+		}
 		this.virtualCircuitID = virtualCircuitID;
 		initializeStates();
 		setState(Initialized.class);
@@ -53,6 +55,10 @@ public class LcpConnection implements Runnable {
 		lcpp.setDestination(otherIP, -1);
 		lcpp.setVCID(virtualCircuitID);
 		handler.send(lcpp);
+	}
+	
+	public boolean isInitialized() {
+		return Initialized.class.isInstance(getState());
 	}
 	
 	public boolean isEstablished() {

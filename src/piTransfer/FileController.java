@@ -51,6 +51,10 @@ public class FileController implements FileStore {
 		System.out.format("Wrote the file %s to disk\n", filename);
 	}
 	
+	public byte[] get(String filename) {
+		return FileHelper.getFileContents(filename);
+	}
+	
 	public ArrayList<String> listLocalFiles() {
 		return FileHelper.getFileNames();
 	}

@@ -1,6 +1,7 @@
 package berryPicker;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 public interface Transmitter {
 
@@ -11,9 +12,14 @@ public interface Transmitter {
 	
 	public abstract ArrayList<String> listRemoteFiles();
 
-	// Interface towards transmitter
+	// Interface towards ConnectionHandler
 	
 	public abstract void saveFile(FileObject file);
 	
-	public abstract ArrayList<String> listFiles();
+	public abstract boolean getFile(String filename, int destinationId);
+
+	public abstract void processHeartbeat(int berryId, Date timestamp, ArrayList<String> files);
+	
+	public abstract ArrayList<String> listLocalFiles();
+	
 }

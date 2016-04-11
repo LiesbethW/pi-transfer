@@ -36,5 +36,8 @@ public interface Protocol {
 	public static String FILE_CHECKSUM = "FILE_CHECKSUM";
 	public static String WINDOWSIZE = "WINDOWSIZE";
 	public static String ENCRYPTION = "ENCRYPTION";
+	public static String OFFSET = "OFFSET";
+	public static String TIMESTAMP = "TIMESTAMP";
+	public static String FILES = "FILES";
 	
 }

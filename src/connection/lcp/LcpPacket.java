@@ -3,6 +3,11 @@ package connection.lcp;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.zip.CRC32;
 
@@ -12,14 +17,7 @@ import connection.Utilities;
 public class LcpPacket implements Protocol {
 	
 	private static CRC32 checksumCalculator = new CRC32();
-	
-	public static LcpPacket heartbeat() {
-		LcpPacket lcpp = new LcpPacket(Utilities.broadcastAddress(), 
-				Utilities.getBroadcastPort());;
-		lcpp.setMessage("I'm alive!");
-		lcpp.setHeartbeat();
-		return lcpp;
-	}
+	private static DateFormat dateFormat = DateFormat.getDateInstance();
 	
 	private DatagramPacket packet;
 	private byte[] buffer = new byte[0];
@@ -67,9 +65,13 @@ public class LcpPacket implements Protocol {
 		return new String(getData());
 	}
 	
+	public int getSourceId() {
+		return (int) 0xff & header[SOURCE_FIELD];
+	}
+	
 	public InetAddress getSource() {
 		try {
-			String ip = String.format("%s.%d", Utilities.IP_RANGE, (int) 0xff & header[2]);
+			String ip = String.format("%s.%d", Utilities.IP_RANGE, getSourceId());
 			return InetAddress.getByName(ip);
 		} catch (UnknownHostException e) {
 			return null;
@@ -142,6 +144,29 @@ public class LcpPacket implements Protocol {
 		}
 	}
 	
+	public Date getTimestamp() {
+		if (options.containsKey(TIMESTAMP)) {
+			try {
+				return dateFormat.parse(options.get(TIMESTAMP));
+			} catch (ParseException e) {
+				return new Date();
+			}
+			
+		} else {
+			return new Date();
+		}
+	}
+	
+	public ArrayList getFileList() {
+		if (options.containsKey(FILES)) {
+			ArrayList<String> files = new ArrayList<String>
+				(Arrays.asList(options.get(FILES).split(DELIMITER3)));
+			return files;
+		} else {
+			return new ArrayList<String>();
+		}
+	}
+	
 	public void setSyn(FileObject file) {
 		setFlag(SYN);
 		setMessage(serializeFileInfo(file));
@@ -167,12 +192,16 @@ public class LcpPacket implements Protocol {
 		setFlag(FILE_PART);
 	}
 	
-	public void setFileRequest() {
+	public void setFileRequest(String filename, int offset, boolean encryption) {
 		setFlag(FILE_REQUEST);
+		this.setMessage(this.serializeFileRequest(filename, offset, encryption));
 	}
 	
-	public void setHeartbeat() {
+	public void setHeartbeat(ArrayList<String> files) {
 		setFlag(HEARTBEAT);
+		this.setSource();
+		this.setDestination(Utilities.broadcastAddress(), Utilities.getBroadcastPort());
+		this.setMessage(this.serializeHeartbeatInfo(files));
 	}
 	
 	public void setVCID(short vcID) {
@@ -268,6 +297,20 @@ public class LcpPacket implements Protocol {
 		long checksum = checksumCalculator.getValue();
 		String fileChecksum = String.join(DELIMITER2, FILE_CHECKSUM, String.valueOf(checksum));
 		return String.join(DELIMITER, fileName, totalLength, fileChecksum);		
+	}
+	
+	private String serializeFileRequest(String filename, int offset, boolean encryption) {
+		String filenameString = String.join(DELIMITER2, FILENAME, filename);
+		String offsetString = String.join(DELIMITER2, OFFSET, String.valueOf(offset));
+		String encryptionPlease = String.join(DELIMITER2, ENCRYPTION, String.valueOf(encryption));
+		return String.join(DELIMITER, filenameString, offsetString, encryptionPlease);
+	}
+	
+	private String serializeHeartbeatInfo(ArrayList<String> files) {
+		String timestampString = String.join(DELIMITER2, TIMESTAMP, dateFormat.format(new Date()));
+		String fileList = String.join(DELIMITER3, files);
+		String fileListString = String.join(DELIMITER2, FILES, fileList);
+		return String.join(DELIMITER, timestampString, fileListString);
 	}
 	
 	private void deSerializeMessage() {

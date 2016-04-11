@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -73,8 +75,16 @@ public class LcpPacketTest {
 	
 	@Test
 	public void testHeartbeat() {
-		LcpPacket heartbeat = LcpPacket.heartbeat();
-		assertEquals("I'm alive!", heartbeat.getMessage());
+		String myFile = "my_file.txt";
+		ArrayList<String> files = new ArrayList<String>(Arrays.asList(myFile, "file2.png"));
+		LcpPacket heartbeat = new LcpPacket();
+		heartbeat.setHeartbeat(files);
+		assertTrue(heartbeat.getMessage().contains(myFile));
+		
+		DatagramPacket dp = heartbeat.datagram();
+		LcpPacket parsedPacket = new LcpPacket(dp);
+		parsedPacket.print();
+		assertEquals(files, parsedPacket.getFileList());
 	}
 	
 	@Test

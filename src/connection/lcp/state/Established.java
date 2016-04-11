@@ -3,6 +3,9 @@ package connection.lcp.state;
 import berryPicker.FileObject;
 import connection.lcp.LcpConnection;
 import connection.lcp.LcpPacket;
+import connection.lcp.Protocol;
+import connection.lcp.commands.ProcessFilePart;
+import connection.lcp.commands.ProcessFilePartAck;
 
 public class Established extends AbstractConnectionState {
 	
@@ -16,8 +19,8 @@ public class Established extends AbstractConnectionState {
 
 	@Override
 	protected void initializeTransitionMap() {
-		// TODO Auto-generated method stub
-		
+		transitionMap.put(Protocol.FILE_PART, new ProcessFilePart());
+		transitionMap.put(Protocol.FILE_PART_ACK, new ProcessFilePartAck());
 	}
 
 }

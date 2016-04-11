@@ -74,6 +74,10 @@ public class FileHelper {
 		ArrayList<String> fileNames = new ArrayList<String>();
 		
 		File folder = new File(FileHelper.FILE_DIR);
+		
+		// Be sure that the directory exists
+		folder.mkdir();
+		
 		File[] files = folder.listFiles();
 		for (int i = 0; i < files.length; i++) {
 			fileNames.add(files[i].getName());

@@ -14,9 +14,7 @@ public class GeneralCommunicator {
 	}
 	
 	public void process(LcpPacket lcpp) {
-		if (lcpp.fileRequest()) {
 
-		}
 	}
 	
 	public void sendFileRequest(String filename, InetAddress berry) {

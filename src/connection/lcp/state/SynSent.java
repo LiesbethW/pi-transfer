@@ -13,7 +13,7 @@ public class SynSent extends AbstractConnectionState {
 	
 	@Override
 	protected void initializeTransitionMap() {
-		transitionMap.put(Protocol.ACK, new StartTransmission());
+		transitionMap.put(Protocol.SYN_ACK, new StartTransmission());
 
 	}
 

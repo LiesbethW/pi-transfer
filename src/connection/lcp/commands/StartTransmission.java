@@ -9,7 +9,13 @@ public class StartTransmission implements Command {
 
 	@Override
 	public Class<? extends AbstractConnectionState> runCommand(LcpPacket lcpp, ConnectionState state) {
-		// TODO Auto-generated method stub
+
+		LcpPacket ack = new LcpPacket();
+		ack.setAck();
+		state.completeAndSendPacket(ack);
+		
+		state.startTransmission();
+
 		return Established.class;
 	}
 

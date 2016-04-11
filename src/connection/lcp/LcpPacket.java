@@ -155,7 +155,8 @@ public class LcpPacket implements Protocol {
 	
 	public long getFileChecksum() {
 		if (options.containsKey(FILE_CHECKSUM)) {
-			return Long.valueOf(options.get(FILE_CHECKSUM));
+			String checksumString = options.get(FILE_CHECKSUM).trim();
+			return Long.parseLong(checksumString);
 		} else {
 			return 0;
 		}
@@ -364,6 +365,7 @@ public class LcpPacket implements Protocol {
 		System.out.format("Destination: %x\n", header[DESTINATION_FIELD]);
 		System.out.format("Source: %s\n", this.getSource().toString());
 		System.out.format("VCID: %d\n", this.getVCID());
+		System.out.format("Sequence Number", this.getSequenceNumber());
 		System.out.println("-----------CONTENT-----------");
 		System.out.println(this.getMessage());
 	}

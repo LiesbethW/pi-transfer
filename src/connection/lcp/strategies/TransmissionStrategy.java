@@ -28,6 +28,7 @@ public abstract class TransmissionStrategy {
 		byte[] content = connection.getFile().getPart(sequenceNumber);
 		LcpPacket filePart = new LcpPacket();
 		filePart.setFilePart(content, sequenceNumber);
+		this.connection().completeAndSendPacket(filePart);
 	}
 	
 	protected void savePart(byte[] data, int partNumber) {

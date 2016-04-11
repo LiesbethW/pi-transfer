@@ -12,8 +12,6 @@ public abstract class AbstractConnectionState implements ConnectionState {
 	protected HashMap<Integer, Command> transitionMap = new HashMap<Integer, Command>();
 	protected int maxTimeOuts = 2;
 	protected int timeOuts = 0;
-	protected boolean downloadCompleted;
-	protected boolean transmissionCompleted;
 	
 	public AbstractConnectionState(LcpConnection connection) {
 		this.connection = connection;
@@ -25,6 +23,10 @@ public abstract class AbstractConnectionState implements ConnectionState {
 		// be reset to 0.
 		timeOuts = 0;
 		return transition(lcpp);
+	}
+	
+	public void startTransmission() {
+		connection.getStrategy().startTransmission();
 	}
 	
 	public void handleAck(LcpPacket lcpp) {
@@ -61,19 +63,19 @@ public abstract class AbstractConnectionState implements ConnectionState {
 	}
 	
 	public boolean downloadCompleted() {
-		return downloadCompleted;
+		return connection.downloadCompleted();
 	}
 	
 	public boolean transmissionCompleted() {
-		return transmissionCompleted;
+		return connection.transmissionCompleted();
 	}
 	
 	public void setDownloadCompleted() {
-		downloadCompleted = true;
+		connection.setDownloadCompleted();
 	}
 	
 	public void setTransmissionCompleted() {
-		transmissionCompleted = true;
+		connection.setTransmissionCompleted();
 	}
 	
 	protected abstract void initializeTransitionMap();

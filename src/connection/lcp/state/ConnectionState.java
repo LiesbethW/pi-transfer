@@ -9,6 +9,8 @@ public interface ConnectionState {
 	
 	public abstract void completeAndSendPacket(LcpPacket lcpp);
 	
+	public abstract void startTransmission();
+	
 	public abstract void handleAck(LcpPacket lcpp);
 	
 	public abstract void handleFilePart(LcpPacket lcpp);

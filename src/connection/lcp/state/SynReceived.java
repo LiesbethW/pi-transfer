@@ -2,6 +2,9 @@ package connection.lcp.state;
 
 import berryPicker.FileObject;
 import connection.lcp.LcpConnection;
+import connection.lcp.Protocol;
+import connection.lcp.commands.ProcessAck;
+import connection.lcp.commands.ProcessFilePart;
 
 public class SynReceived extends AbstractConnectionState {
 
@@ -11,7 +14,8 @@ public class SynReceived extends AbstractConnectionState {
 	
 	@Override
 	protected void initializeTransitionMap() {
-		// TODO Auto-generated method stub
+		transitionMap.put(Protocol.ACK, new ProcessAck());
+		transitionMap.put(Protocol.FILE_PART, new ProcessFilePart());
 
 	}
 

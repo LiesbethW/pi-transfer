@@ -102,11 +102,8 @@ public class Client {
 					DatagramPacket receivedPacket = new DatagramPacket(recvBuf, recvBuf.length);
 					clientSocket.receive(receivedPacket);
 					
-					System.out.println("Received packet from " + receivedPacket.getAddress().getHostAddress());
-					
 					if (receivedPacket.getAddress().getHostAddress()
 							.equals(Utilities.getMyInetAddress().getHostAddress())) {
-						System.out.println("Ignoring my own packet.");
 					} else {
 						receivedPacketQueue.offer(new LcpPacket(receivedPacket));
 					}

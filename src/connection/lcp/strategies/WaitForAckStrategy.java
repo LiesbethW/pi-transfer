@@ -15,6 +15,10 @@ public class WaitForAckStrategy extends TransmissionStrategy {
 	}
 	
 	public void startTransmission() {
+		System.out.format("Starting transmission of %s to %s\n", 
+				connection().getFile().getName(), 
+				connection().getReceiver().getHostAddress());
+		
 		this.sendPart((byte) 0, 0);
 		lastSequenceNumberSent = 0;
 		lastPacketSent = 0;
@@ -23,13 +27,18 @@ public class WaitForAckStrategy extends TransmissionStrategy {
 	@Override
 	public void handleAck(LcpPacket packet) {
 		if (packet.getSequenceNumber() == lastSequenceNumberSent) {
-			this.sendPart(lastSequenceNumberSent++, lastPacketSent++);
+			if (lastPacketSent >= connection().getFile().numberOfParts()) {
+				this.connection().setTransmissionCompleted();
+			} else {
+				this.sendPart(lastSequenceNumberSent++, lastPacketSent++);
+			}
 		}
 
 	}
 
 	@Override
 	public void handleFilePart(LcpPacket packet) {
+		System.out.println("Handling file part");
 		if (packet.getSequenceNumber() == (byte) lastSequenceNumberReceived + 1) {
 			savePart(packet.getData(), lastPacketSaved + 1);
 			lastSequenceNumberReceived++;

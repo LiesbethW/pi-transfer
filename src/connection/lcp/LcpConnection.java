@@ -32,7 +32,8 @@ public class LcpConnection implements Runnable {
 	private InetAddress otherIP;
 	private FileObject file;
 	private short virtualCircuitID;
-	private boolean downloadCompleted;
+	protected boolean downloadCompleted;
+	protected boolean transmissionCompleted;
 	
 	// States
 	private HashMap<Class<? extends AbstractConnectionState>, AbstractConnectionState> states;
@@ -100,8 +101,28 @@ public class LcpConnection implements Runnable {
 		return downloadCompleted;
 	}
 	
+	public boolean transmissionCompleted() {
+		return transmissionCompleted;
+	}
+	
+	public void setDownloadCompleted() {
+		downloadCompleted = true;
+	}
+	
+	public void setTransmissionCompleted() {
+		transmissionCompleted = true;
+	}
+	
 	public FileObject getFile() {
 		return this.file;
+	}
+	
+	public InetAddress getReceiver() {
+		return otherIP;
+	}
+	
+	public InetAddress getSender() {
+		return otherIP;
 	}
  	
 	/**

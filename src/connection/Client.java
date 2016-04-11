@@ -149,5 +149,9 @@ public class Client {
 
 			System.err.println("Communicator stopped!");
 		}
-	}	
+	}
+	
+	public void kill() {
+		clientSocket.close();
+	}
 }

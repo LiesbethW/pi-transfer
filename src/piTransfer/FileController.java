@@ -58,4 +58,12 @@ public class FileController implements FileStore {
 	public ArrayList<String> listLocalFiles() {
 		return FileHelper.getFileNames();
 	}
+	
+	/**
+	 * For ease of testing
+	 * @return
+	 */
+	public Transmitter getTransmitter() {
+		return transmitter;
+	}
 }

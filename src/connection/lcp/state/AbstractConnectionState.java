@@ -34,7 +34,7 @@ public abstract class AbstractConnectionState implements ConnectionState {
 	
 	protected Class<? extends AbstractConnectionState> transition(LcpPacket lcpp) {
 		if (transitionMap.containsKey(lcpp.getFlag())) {
-			return transitionMap.get(lcpp.getFlag()).runCommand(lcpp, null);
+			return transitionMap.get(lcpp.getFlag()).runCommand(lcpp, this);
 		} else {
 			System.err.println("This state transition is not permitted.");
 			return this.getClass();

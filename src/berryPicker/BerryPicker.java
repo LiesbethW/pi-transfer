@@ -101,6 +101,14 @@ public class BerryPicker implements Runnable, Transmitter {
 		return store.listLocalFiles();
 	}
 	
+	/**
+	 * For ease of testing
+	 * @return
+	 */
+	public ConnectionHandler getConnectionHandler() {
+		return this.connectionHandler;
+	}
+	
 	private InetAddress getBerryById(int berryId) {
 		return connection.Utilities.getInetAddressEndingWith(berryId);
 	}

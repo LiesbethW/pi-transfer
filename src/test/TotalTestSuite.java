@@ -8,7 +8,8 @@ import org.junit.runners.Suite;
   test.lcp.LcpPacketTest.class,
   test.piTransfer.FileHelperTest.class,
   test.berryPicker.FileObjectTest.class,
-  test.lcp.ByteUtilsTest.class
+  test.lcp.ByteUtilsTest.class,
+  test.lcp.LcpConnectionTest.class
 })
 
 

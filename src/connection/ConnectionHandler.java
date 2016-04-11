@@ -145,4 +145,11 @@ public class ConnectionHandler implements Runnable {
 		
 	}
 	
+	/**
+	 * For testing
+	 */
+	public Client getClient() {
+		return UDPClient;
+	}
+	
 }

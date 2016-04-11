@@ -61,6 +61,10 @@ public class LcpConnection implements Runnable {
 		return Initialized.class.isInstance(getState());
 	}
 	
+	public boolean isSynSent() {
+		return SynSent.class.isInstance(getState());
+	}
+	
 	public boolean isEstablished() {
 		return Established.class.isInstance(getState());
 	}

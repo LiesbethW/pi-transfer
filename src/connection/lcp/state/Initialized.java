@@ -14,13 +14,13 @@ public class Initialized extends AbstractConnectionState {
 	}
 	
 	public Class<? extends AbstractConnectionState> digest(LcpPacket lcpp) {
-		return this.getClass();
+		return transition(lcpp);
 	}
 	
 	@Override
 	protected Class<? extends AbstractConnectionState> transition(LcpPacket lcpp) {
 		if (lcpp == null) {
-			return transitionMap.get(START_FLAG).runCommand(lcpp, null);
+			return transitionMap.get(START_FLAG).runCommand(lcpp, this);
 		} else {
 			return super.transition(lcpp);
 		}

@@ -16,6 +16,8 @@ import connection.lcp.state.Established;
 import connection.lcp.state.Initialized;
 import connection.lcp.state.SynReceived;
 import connection.lcp.state.SynSent;
+import connection.lcp.strategies.TransmissionStrategy;
+import connection.lcp.strategies.WaitForAckStrategy;
 
 public class LcpConnection implements Runnable {
 	private static ArrayList<Class<? extends AbstractConnectionState> > stateList =
@@ -25,6 +27,7 @@ public class LcpConnection implements Runnable {
 	// LCP Connection attributes
 	private ConnectionHandler handler;
 	private ConnectionState state;
+	private TransmissionStrategy strategy;
 	private InetAddress myIP;
 	private InetAddress otherIP;
 	private FileObject file;
@@ -34,14 +37,18 @@ public class LcpConnection implements Runnable {
 	// States
 	private HashMap<Class<? extends AbstractConnectionState>, AbstractConnectionState> states;
 	
-	public LcpConnection(ConnectionHandler handler, FileObject file, short virtualCircuitID) {
+	public LcpConnection(ConnectionHandler handler, FileObject file, short virtualCircuitID, InetAddress address) {
 		myIP = Utilities.getMyInetAddress();
 		this.handler = handler;
 		if (file != null) {
-			this.otherIP = file.getDestination();
 			this.file = file;
+			this.setReceiver(address);
+		} else {
+			this.file = new FileObject();
+			this.setSender(address);
 		}
 		this.virtualCircuitID = virtualCircuitID;
+		this.strategy = new WaitForAckStrategy(this);
 		initializeStates();
 		setState(Initialized.class);
 	}
@@ -50,11 +57,19 @@ public class LcpConnection implements Runnable {
 		// DO SOMETHING
 	}
 	
+	public void start() {
+		digest(null);
+	}
+	
 	public void completeAndSendPacket(LcpPacket lcpp) {
 		lcpp.setSource();
 		lcpp.setDestination(otherIP, -1);
 		lcpp.setVCID(virtualCircuitID);
 		handler.send(lcpp);
+	}
+	
+	public TransmissionStrategy getStrategy() {
+		return strategy;
 	}
 	
 	public boolean isInitialized() {
@@ -89,8 +104,21 @@ public class LcpConnection implements Runnable {
 		return this.file;
 	}
  	
+	/**
+	 * Set the file: has side effect of setting destination too!
+	 * @param file
+	 */
 	public void setFile(FileObject file) {
 		this.file = file;
+		setSender(file.getDestination());
+	}
+	
+	public void setSender(InetAddress sender) {
+		this.otherIP = sender;
+	}
+	
+	public void setReceiver(InetAddress receiver) {
+		this.otherIP = receiver;
 	}
 	
 	private void setState(Class<? extends ConnectionState> stateClass) {

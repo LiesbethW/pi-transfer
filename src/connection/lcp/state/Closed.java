@@ -7,7 +7,7 @@ import connection.lcp.LcpPacket;
 public class Closed extends AbstractConnectionState {
 
 	public Closed(LcpConnection connection, FileObject fileObject) {
-		super(connection, fileObject);
+		super(connection);
 	}
 	
 	public Class<? extends AbstractConnectionState> digest(LcpPacket lcpp) {

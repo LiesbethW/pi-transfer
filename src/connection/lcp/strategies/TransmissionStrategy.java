@@ -1,17 +1,41 @@
 package connection.lcp.strategies;
 
-import berryPicker.FileObject;
+import connection.lcp.LcpConnection;
 import connection.lcp.LcpPacket;
 
 public abstract class TransmissionStrategy {
-	private FileObject file;
+	private LcpConnection connection;
 	
-	public TransmissionStrategy() {
-		
+	public TransmissionStrategy(LcpConnection connection) {
+		this.connection = connection;
 	}
 	
-	public abstract void accept(LcpPacket packet);
+	public abstract void startTransmission();
 	
-	public abstract void transmit(FileObject file);
+	public abstract void handleFilePart(LcpPacket packet);
+	
+	public abstract void handleAck(LcpPacket packet);
+	
+	protected void sendAck(byte sequenceNumber) {
+		LcpPacket ack = new LcpPacket();
+		ack.setFilePartAck(sequenceNumber);
+		this.connection().completeAndSendPacket(ack);
+	}
+	
+	protected abstract void updateWindow(byte ack);
+	
+	protected void sendPart(byte sequenceNumber, int partNumber) {
+		byte[] content = connection.getFile().getPart(sequenceNumber);
+		LcpPacket filePart = new LcpPacket();
+		filePart.setFilePart(content, sequenceNumber);
+	}
+	
+	protected void savePart(byte[] data, int partNumber) {
+		connection.getFile().setPart(data, partNumber);
+	}
+	
+	protected LcpConnection connection() {
+		return connection;
+	}
 	
 }

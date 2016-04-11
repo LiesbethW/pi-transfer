@@ -9,15 +9,14 @@ import connection.lcp.commands.Command;
 
 public abstract class AbstractConnectionState implements ConnectionState {
 	protected LcpConnection connection;
-	protected FileObject fileObject;
 	protected HashMap<Integer, Command> transitionMap = new HashMap<Integer, Command>();
 	protected int maxTimeOuts = 2;
 	protected int timeOuts = 0;
+	protected boolean downloadCompleted;
+	protected boolean transmissionCompleted;
 	
-	
-	public AbstractConnectionState(LcpConnection connection, FileObject fileObject) {
+	public AbstractConnectionState(LcpConnection connection) {
 		this.connection = connection;
-		this.fileObject = fileObject;
 		initializeTransitionMap();
 	}
 	
@@ -26,6 +25,14 @@ public abstract class AbstractConnectionState implements ConnectionState {
 		// be reset to 0.
 		timeOuts = 0;
 		return transition(lcpp);
+	}
+	
+	public void handleAck(LcpPacket lcpp) {
+		connection.getStrategy().handleAck(lcpp);
+	}
+	
+	public void handleFilePart(LcpPacket lcpp) {
+		connection.getStrategy().handleFilePart(lcpp);
 	}
 	
 	public void completeAndSendPacket(LcpPacket lcpp) {
@@ -50,7 +57,23 @@ public abstract class AbstractConnectionState implements ConnectionState {
 	}
 	
 	public FileObject getFile() {
-		return fileObject;
+		return connection.getFile();
+	}
+	
+	public boolean downloadCompleted() {
+		return downloadCompleted;
+	}
+	
+	public boolean transmissionCompleted() {
+		return transmissionCompleted;
+	}
+	
+	public void setDownloadCompleted() {
+		downloadCompleted = true;
+	}
+	
+	public void setTransmissionCompleted() {
+		transmissionCompleted = true;
 	}
 	
 	protected abstract void initializeTransitionMap();

@@ -1,14 +1,21 @@
 package berryPicker;
 
 import java.net.InetAddress;
+import java.util.zip.CRC32;
 
 public class FileObject {
 	public static int DEFAULT_LENGTH = 1443;
+	private static CRC32 checksumCalculator = new CRC32();
 	
 	private String name;
 	private byte[] content;
 	private InetAddress destination;
 	private int bytesPerPart = DEFAULT_LENGTH;
+	private long checksum;
+	
+	public FileObject() {
+		this.setEmptyContent(0);
+	}
 	
 	public FileObject(byte[] content, String name) {
 		setContent(content);
@@ -116,6 +123,22 @@ public class FileObject {
 	
 	public void setBytesPerPart(int bytesPerPart) {
 		this.bytesPerPart = bytesPerPart;
+	}
+	
+	public void setFileChecksum(long checksum) {
+		this.checksum = checksum;
+	}
+	
+	public boolean checkFileChecksum() {
+		if (checksum == 0) {
+			return false;
+		} else {
+			checksumCalculator.reset();
+			checksumCalculator.update(this.getContent());
+			long calculatedChecksum = checksumCalculator.getValue();
+			return calculatedChecksum == checksum;
+		}
+		
 	}
 	
 }

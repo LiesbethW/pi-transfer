@@ -21,6 +21,7 @@ public interface Protocol {
 	public static int FIN = 8;
 	public static int FIN_ACK = 10;
 	public static int FILE_PART = 16;
+	public static int FILE_PART_ACK = 18;
 	public static int FILE_REQUEST = 32;
 	public static int NEGOTIATION = 64;
 	public static int HEARTBEAT = 255;

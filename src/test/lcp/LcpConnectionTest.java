@@ -34,7 +34,7 @@ public class LcpConnectionTest {
 		file = new FileObject("My file content.".getBytes(), "my_file.txt");
 		file.setDestination(Utilities.getInetAddressEndingWith(2));
 		vcid = 23987;
-		connection = new LcpConnection(handler, file, vcid);
+		connection = new LcpConnection(handler, file, vcid, null);
 	}
 	
 	@Test

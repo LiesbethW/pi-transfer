@@ -19,15 +19,19 @@ public class ConnectionHandler implements Runnable {
 	private static long HEARTBEATINTERVAL = 10000;
 	
 	private InetAddress bcastAddress;
+	private InetAddress myAddress;
 	private Client UDPClient;
+	private GeneralCommunicator general;
 	private HashMap<Short, LcpConnection> lcpConnections;
 	private Transmitter transmitter;
 	
 	public ConnectionHandler(Transmitter transmitter) throws IOException {
 		this.transmitter = transmitter;
 		bcastAddress = Utilities.broadcastAddress();
+		myAddress = Utilities.getMyInetAddress();
 		int port = Utilities.getBroadcastPort();
 		UDPClient = new Client(port);
+		general = new GeneralCommunicator(this);
 		lcpConnections = new HashMap<Short, LcpConnection>();
 	}
 	
@@ -40,14 +44,14 @@ public class ConnectionHandler implements Runnable {
 	}
 	
 	public void transmitFile(FileObject file) {
-		LcpConnection lcpc = this.createNewLcpConnection();
-		lcpc.setFile(file);
-		Thread lcpThread = new Thread(lcpc);
-		lcpThread.start();
+		LcpConnection lcpc = this.createNewLcpConnection(file);
+		System.out.println("File with name " + file.getName());
+		System.out.println("And content " + (new String(file.getContent())));
+		lcpc.start();
 	}
 	
-	public void requestFile(String filename) {
-		
+	public void requestFile(String filename, InetAddress berry) {
+		general.sendFileRequest(filename, berry);
 	}
 	
 	private void startHeartbeat() {
@@ -66,8 +70,21 @@ public class ConnectionHandler implements Runnable {
 					Date timestamp = packet.getTimestamp();
 					ArrayList<String> files = packet.getFileList();
 					transmitter.processHeartbeat(berryId, timestamp, files);
+				} else if (packet.getDestination().equals(bcastAddress)) {
+					general.process(packet);
+				} else if (packet.getDestination().equals(myAddress)) {
+					short vcid = packet.getVCID();
+					if (lcpConnections.containsKey(vcid)) {
+						lcpConnections.get(vcid).digest(packet);
+					} else {
+						System.out.println("VCID " + vcid + " is not yet known, I'm starting a new connection.");
+						LcpConnection connection = this.createNewLcpConnection(vcid, packet.getAddress());
+						connection.digest(packet);
+					}
+				} else {
+					System.out.println("This packet is not for me:");
+					packet.print();
 				}
-				
 				
 			}
 		}
@@ -118,12 +135,28 @@ public class ConnectionHandler implements Runnable {
 		return vcid;
 	}
 	
-	private LcpConnection createNewLcpConnection() {
-		return createNewLcpConnection(generateVCID());
+	/**
+	 * Create a new LcpConnection for a file with destination
+	 * that you wish to send
+	 * @param file
+	 * @return
+	 */
+	private LcpConnection createNewLcpConnection(FileObject file) {
+		return createNewLcpConnection(file, generateVCID(), file.getDestination());
 	}
 	
-	private LcpConnection createNewLcpConnection(Short vcid) {
-		lcpConnections.put(vcid, new LcpConnection(this, null, vcid));
+	/**
+	 * Create a new LcpConnection based on an incoming packet
+	 * @param vcid
+	 * @param address
+	 * @return
+	 */
+	private LcpConnection createNewLcpConnection(Short vcid, InetAddress address) {
+		return createNewLcpConnection(null, vcid, address);
+	}
+	
+	private LcpConnection createNewLcpConnection(FileObject file, Short vcid, InetAddress address) {
+		lcpConnections.put(vcid, new LcpConnection(this, file, vcid, address));
 		return lcpConnections.get(vcid);
 	}
 	

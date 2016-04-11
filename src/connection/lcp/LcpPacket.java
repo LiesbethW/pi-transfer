@@ -41,7 +41,7 @@ public class LcpPacket implements Protocol {
 	}
 	
 	public LcpPacket(DatagramPacket packet) {
-		this(packet.getAddress(), packet.getPort());
+//		setPort(packet.getPort());
 		buffer = packet.getData();
 		data = new byte[buffer.length - HEADERLEN];
 		System.arraycopy(buffer, 0, header, 0, HEADERLEN);
@@ -72,6 +72,19 @@ public class LcpPacket implements Protocol {
 	public InetAddress getSource() {
 		try {
 			String ip = String.format("%s.%d", Utilities.IP_RANGE, getSourceId());
+			return InetAddress.getByName(ip);
+		} catch (UnknownHostException e) {
+			return null;
+		}
+	}
+	
+	public int getDestinationId() {
+		return (int) 0xff & header[DESTINATION_FIELD];
+	}
+	
+	public InetAddress getDestination() {
+		try {
+			String ip = String.format("%s.%d", Utilities.IP_RANGE, getDestinationId());
 			return InetAddress.getByName(ip);
 		} catch (UnknownHostException e) {
 			return null;
@@ -110,6 +123,14 @@ public class LcpPacket implements Protocol {
 		return getFlag() == FILE_REQUEST;
 	}
 	
+	public boolean filePart() {
+		return getFlag() == FILE_PART;
+	}
+	
+	public boolean filePartAck() {
+		return getFlag() == FILE_PART_ACK;
+	}
+	
 	public boolean isHeartbeat() {
 		return getFlag() == HEARTBEAT;
 	}
@@ -118,6 +139,10 @@ public class LcpPacket implements Protocol {
 		byte[] vcid = new byte[Short.BYTES];
 		System.arraycopy(header, VCID_FIELD, vcid, 0, Short.BYTES);
 		return ByteUtils.bytesToShort(vcid);
+	}
+	
+	public byte getSequenceNumber() {
+		return header[SEQUENCE_NUMBER];
 	}
 	
 	public String getFileName() {
@@ -157,7 +182,7 @@ public class LcpPacket implements Protocol {
 		}
 	}
 	
-	public ArrayList getFileList() {
+	public ArrayList<String> getFileList() {
 		if (options.containsKey(FILES)) {
 			ArrayList<String> files = new ArrayList<String>
 				(Arrays.asList(options.get(FILES).split(DELIMITER3)));
@@ -188,8 +213,15 @@ public class LcpPacket implements Protocol {
 		setFlag(FIN_ACK);
 	}
 	
-	public void setFilePart() {
+	public void setFilePart(byte[] filePart, byte sequenceNumber) {
 		setFlag(FILE_PART);
+		header[SEQUENCE_NUMBER] = sequenceNumber;
+		this.setData(filePart);
+	}
+	
+	public void setFilePartAck(byte sequenceNumber) {
+		setFlag(FILE_PART_ACK);
+		header[SEQUENCE_NUMBER] = sequenceNumber;
 	}
 	
 	public void setFileRequest(String filename, int offset, boolean encryption) {

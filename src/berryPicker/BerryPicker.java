@@ -18,7 +18,7 @@ public class BerryPicker implements Runnable, Transmitter {
 	public BerryPicker(FileStore store) {
 		try {
 			this.store = store;
-			connectionHandler = new ConnectionHandler();
+			connectionHandler = new ConnectionHandler(this);
 			Thread thread = new Thread(connectionHandler);
 			thread.start();
 		} catch (IOException e) {
@@ -55,6 +55,10 @@ public class BerryPicker implements Runnable, Transmitter {
 	public byte[] downloadFile(String filename) {
 		// TO DO
 		return "The amazing content of your file.".getBytes();
+	}
+	
+	public void saveFile(FileObject file) {
+		receivedFiles.add(file);
 	}
 	
 	public ArrayList<String> listRemoteFiles() {

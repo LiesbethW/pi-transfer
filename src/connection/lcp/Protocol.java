@@ -28,6 +28,7 @@ public interface Protocol {
 	// delimiters
 	public static String DELIMITER = "\n";
 	public static String DELIMITER2 = ":";
+	public static String DELIMITER3 = ",";
 	
 	// option strings
 	public static String FILENAME = "FILENAME";

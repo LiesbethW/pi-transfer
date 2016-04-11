@@ -10,5 +10,10 @@ public interface Transmitter {
 	public abstract byte[] downloadFile(String filename);
 	
 	public abstract ArrayList<String> listRemoteFiles();
+
+	// Interface towards transmitter
 	
+	public abstract void saveFile(FileObject file);
+	
+	public abstract ArrayList<String> listFiles();
 }

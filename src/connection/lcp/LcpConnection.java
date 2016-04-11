@@ -29,6 +29,7 @@ public class LcpConnection implements Runnable {
 	private InetAddress otherIP;
 	private FileObject file;
 	private short virtualCircuitID;
+	private boolean downloadCompleted;
 	
 	// States
 	private HashMap<Class<? extends AbstractConnectionState>, AbstractConnectionState> states;
@@ -58,6 +59,10 @@ public class LcpConnection implements Runnable {
 		return Established.class.isInstance(getState());
 	}
 	
+	public boolean isClosed() {
+		return Closed.class.isInstance(getState());
+	}
+	
 	public ConnectionState getState() {
 		return state;
 	}
@@ -66,6 +71,14 @@ public class LcpConnection implements Runnable {
 		setState(getState().digest(lcpp));
 	}
 	
+	public boolean downloadCompleted() {
+		return downloadCompleted;
+	}
+	
+	public FileObject getFile() {
+		return this.file;
+	}
+ 	
 	public void setFile(FileObject file) {
 		this.file = file;
 	}

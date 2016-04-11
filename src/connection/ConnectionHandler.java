@@ -9,6 +9,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import berryPicker.FileObject;
+import berryPicker.Transmitter;
 import connection.lcp.ByteUtils;
 import connection.lcp.LcpConnection;
 import connection.lcp.LcpPacket;
@@ -19,8 +20,10 @@ public class ConnectionHandler implements Runnable {
 	private InetAddress bcastAddress;
 	private Client UDPClient;
 	private HashMap<Short, LcpConnection> lcpConnections;
+	private Transmitter transmitter;
 	
-	public ConnectionHandler() throws IOException {
+	public ConnectionHandler(Transmitter transmitter) throws IOException {
+		this.transmitter = transmitter;
 		bcastAddress = Utilities.broadcastAddress();
 		int port = Utilities.getBroadcastPort();
 		UDPClient = new Client(port);
@@ -31,6 +34,7 @@ public class ConnectionHandler implements Runnable {
 		this.startHeartbeat();
 		while (true) {
 			handlePackets();
+			checkConnections();
 		}
 	}
 	
@@ -52,6 +56,27 @@ public class ConnectionHandler implements Runnable {
 			if (packet != null) {
 				packet.print();
 			}
+		}
+	}
+	
+	/**
+	 * Check for closed connection and remove those from the
+	 * active list. Save the file if it completed downloading.
+	 */
+	private void checkConnections() {
+		short connectionToRemove = -1;
+		for (Short vcid : lcpConnections.keySet()) {
+			if (lcpConnections.get(vcid).isClosed()) {
+				connectionToRemove = vcid;
+				break;
+			}
+		}
+		if (connectionToRemove != -1) { 
+			if (lcpConnections.get(connectionToRemove).downloadCompleted()) {
+				FileObject file = lcpConnections.get(connectionToRemove).getFile();
+				transmitter.saveFile(file);
+			}
+			lcpConnections.remove(connectionToRemove);
 		}
 	}
 	

@@ -33,11 +33,12 @@ public class LcpConnection implements Runnable {
 	// States
 	private HashMap<Class<? extends AbstractConnectionState>, AbstractConnectionState> states;
 	
-	public LcpConnection(ConnectionHandler handler, FileObject file) {
+	public LcpConnection(ConnectionHandler handler, FileObject file, short virtualCircuitID) {
 		myIP = Utilities.getMyInetAddress();
 		this.handler = handler;
 		this.otherIP = file.getDestination();
 		this.file = file;
+		this.virtualCircuitID = virtualCircuitID;
 		initializeStates();
 		setState(Initialized.class);
 	}
@@ -63,6 +64,10 @@ public class LcpConnection implements Runnable {
 	
 	public void digest(LcpPacket lcpp) {
 		setState(getState().digest(lcpp));
+	}
+	
+	public void setFile(FileObject file) {
+		this.file = file;
 	}
 	
 	private void setState(Class<? extends ConnectionState> stateClass) {

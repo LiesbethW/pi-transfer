@@ -35,6 +35,10 @@ public class Utilities {
 		return myAddress;
 	}
 	
+	public static int getMyId() {
+		return (int) 0xff & getMyInetAddress().getAddress()[3];
+	}
+	
 	public static InetAddress getInetAddressEndingWith(int id) {
 		String host = String.join(".", IP_RANGE, String.valueOf(id));
 		try {

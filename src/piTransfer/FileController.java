@@ -29,11 +29,14 @@ public class FileController implements FileStore {
 	
 	public FileController() {
 		transmitter = new BerryPicker(this);
+		Thread transmissionThread = new Thread(transmitter);
+		transmissionThread.start();
 	}
 	
-	public void upload(String filename) {
-		byte[] fileContent = FileHelper.getFileContents(filename);
-		transmitter.uploadFile(fileContent, filename);
+	public void upload(String pathName) {
+		byte[] fileContent = FileHelper.getFileContents(pathName);
+		String fileName = FileHelper.getFilename(pathName);
+		transmitter.uploadFile(fileContent, fileName);
 	}
 	
 	public void download(String filename) {
@@ -51,7 +54,19 @@ public class FileController implements FileStore {
 		System.out.format("Wrote the file %s to disk\n", filename);
 	}
 	
+	public byte[] get(String filename) {
+		return FileHelper.getFileContents(filename);
+	}
+	
 	public ArrayList<String> listLocalFiles() {
 		return FileHelper.getFileNames();
+	}
+	
+	/**
+	 * For ease of testing
+	 * @return
+	 */
+	public Transmitter getTransmitter() {
+		return transmitter;
 	}
 }

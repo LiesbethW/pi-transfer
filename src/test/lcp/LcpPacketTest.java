@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -59,6 +61,7 @@ public class LcpPacketTest {
 		// Turn datagram into packet
 		LcpPacket newPacket = new LcpPacket(datagram);
 		assertEquals(message, newPacket.getMessage());
+		assertEquals(packet.getData().length, newPacket.getData().length);
 	}
 	
 	@Test
@@ -66,6 +69,7 @@ public class LcpPacketTest {
 		packet.setMessage("Hello, World!");
 		// Turen packet into datagram: this includes adding checksum
 		DatagramPacket datagram = packet.datagram();
+		
 		// Turn datagram into packet
 		LcpPacket newPacket = new LcpPacket(datagram);
 		assertTrue(newPacket.checkChecksum());
@@ -73,8 +77,16 @@ public class LcpPacketTest {
 	
 	@Test
 	public void testHeartbeat() {
-		LcpPacket heartbeat = LcpPacket.heartbeat();
-		assertEquals("I'm alive!", heartbeat.getMessage());
+		String myFile = "my_file.txt";
+		ArrayList<String> files = new ArrayList<String>(Arrays.asList(myFile, "file2.png"));
+		LcpPacket heartbeat = new LcpPacket();
+		heartbeat.setHeartbeat(files);
+		assertTrue(heartbeat.getMessage().contains(myFile));
+		
+		DatagramPacket dp = heartbeat.datagram();
+		LcpPacket parsedPacket = new LcpPacket(dp);
+		parsedPacket.print();
+		assertEquals(files, parsedPacket.getFileList());
 	}
 	
 	@Test
@@ -112,5 +124,21 @@ public class LcpPacketTest {
 		assertNotNull(receivedPacket.getFileName());
 		assertNotNull(receivedPacket.getFileChecksum());
 	}
+	
+	@Test
+	public void testContentLength() {
+		String message = "Hello, World!";
+		packet.setMessage(message);
+		
+		DatagramPacket datagram = packet.datagram();
+		assertEquals(message.getBytes().length, packet.getContentLength());
+		
+		LcpPacket receivedPacket = new LcpPacket(datagram);
+		assertEquals(receivedPacket.getData().length, receivedPacket.getContentLength());
+		assertEquals(receivedPacket.getContentLength(), packet.getContentLength());
+		
+	}
+	
+	
 	
 }

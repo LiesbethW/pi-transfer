@@ -102,13 +102,18 @@ public class Client {
 					DatagramPacket receivedPacket = new DatagramPacket(recvBuf, recvBuf.length);
 					clientSocket.receive(receivedPacket);
 					
-					System.out.println("Received packet from " + receivedPacket.getAddress().getHostAddress());
-					
 					if (receivedPacket.getAddress().getHostAddress()
 							.equals(Utilities.getMyInetAddress().getHostAddress())) {
-						System.out.println("Ignoring my own packet.");
+						// Ignore my own packet
 					} else {
-						receivedPacketQueue.offer(new LcpPacket(receivedPacket));
+						
+						LcpPacket lcpp = new LcpPacket(receivedPacket);
+						if (lcpp.checkChecksum()) {
+							receivedPacketQueue.offer(lcpp);
+						} else {
+							lcpp.print();
+							System.out.println("Packet checksum was wrong: drop packet");
+						}
 					}
 				}
 			} catch (IOException e) {
@@ -149,5 +154,9 @@ public class Client {
 
 			System.err.println("Communicator stopped!");
 		}
-	}	
+	}
+	
+	public void kill() {
+		clientSocket.close();
+	}
 }

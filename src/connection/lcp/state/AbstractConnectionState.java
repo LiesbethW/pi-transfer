@@ -9,15 +9,12 @@ import connection.lcp.commands.Command;
 
 public abstract class AbstractConnectionState implements ConnectionState {
 	protected LcpConnection connection;
-	protected FileObject fileObject;
 	protected HashMap<Integer, Command> transitionMap = new HashMap<Integer, Command>();
 	protected int maxTimeOuts = 2;
 	protected int timeOuts = 0;
 	
-	
-	public AbstractConnectionState(LcpConnection connection, FileObject fileObject) {
+	public AbstractConnectionState(LcpConnection connection) {
 		this.connection = connection;
-		this.fileObject = fileObject;
 		initializeTransitionMap();
 	}
 	
@@ -28,13 +25,25 @@ public abstract class AbstractConnectionState implements ConnectionState {
 		return transition(lcpp);
 	}
 	
+	public void startTransmission() {
+		connection.getStrategy().startTransmission();
+	}
+	
+	public void handleAck(LcpPacket lcpp) {
+		connection.getStrategy().handleAck(lcpp);
+	}
+	
+	public void handleFilePart(LcpPacket lcpp) {
+		connection.getStrategy().handleFilePart(lcpp);
+	}
+	
 	public void completeAndSendPacket(LcpPacket lcpp) {
 		connection.completeAndSendPacket(lcpp);
 	}
 	
 	protected Class<? extends AbstractConnectionState> transition(LcpPacket lcpp) {
 		if (transitionMap.containsKey(lcpp.getFlag())) {
-			return transitionMap.get(lcpp.getFlag()).runCommand(lcpp, null);
+			return transitionMap.get(lcpp.getFlag()).runCommand(lcpp, this);
 		} else {
 			System.err.println("This state transition is not permitted.");
 			return this.getClass();
@@ -50,7 +59,19 @@ public abstract class AbstractConnectionState implements ConnectionState {
 	}
 	
 	public FileObject getFile() {
-		return fileObject;
+		return connection.getFile();
+	}
+	
+	public boolean downloadCompleted() {
+		return connection.downloadCompleted();
+	}
+	
+	public boolean transmissionCompleted() {
+		return connection.transmissionCompleted();
+	}
+	
+	public void setTransmissionCompleted() {
+		connection.setTransmissionCompleted();
 	}
 	
 	protected abstract void initializeTransitionMap();

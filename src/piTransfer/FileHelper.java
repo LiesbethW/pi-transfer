@@ -17,8 +17,8 @@ public class FileHelper {
 	 * @return the array of integers, representing the contents of the file to
 	 *         transmit
 	 */
-	public static byte[] getFileContents(String filename) {
-		File fileToTransmit = new File(filename);
+	public static byte[] getFileContents(String pathName) {
+		File fileToTransmit = new File(pathName);
 		try (FileInputStream fileStream = new FileInputStream(fileToTransmit)) {
 			byte[] fileContents = new byte[(int) fileToTransmit.length()];
 
@@ -36,6 +36,11 @@ public class FileHelper {
 			System.err.println(e.getStackTrace());
 			return null;
 		}
+	}
+	
+	public static String getFilename(String pathName) {
+		File fileToTransmit = new File(pathName);
+		return fileToTransmit.getName();
 	}
 	
 	/**
@@ -74,6 +79,10 @@ public class FileHelper {
 		ArrayList<String> fileNames = new ArrayList<String>();
 		
 		File folder = new File(FileHelper.FILE_DIR);
+		
+		// Be sure that the directory exists
+		folder.mkdir();
+		
 		File[] files = folder.listFiles();
 		for (int i = 0; i < files.length; i++) {
 			fileNames.add(files[i].getName());

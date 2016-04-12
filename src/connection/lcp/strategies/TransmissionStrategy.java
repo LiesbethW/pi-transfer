@@ -25,13 +25,14 @@ public abstract class TransmissionStrategy {
 	protected abstract void updateWindow(byte ack);
 	
 	protected void sendPart(byte sequenceNumber, int partNumber) {
-		byte[] content = connection.getFile().getPart(sequenceNumber);
+		byte[] content = connection.getFile().getPart(partNumber);
 		LcpPacket filePart = new LcpPacket();
 		filePart.setFilePart(content, sequenceNumber);
 		this.connection().completeAndSendPacket(filePart);
 	}
 	
 	protected void savePart(byte[] data, int partNumber) {
+		System.out.format("Saving part %d (with length %d)\n", partNumber, data.length);
 		connection.getFile().setPart(data, partNumber);
 	}
 	

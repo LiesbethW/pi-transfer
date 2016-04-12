@@ -13,6 +13,7 @@ import connection.lcp.state.AbstractConnectionState;
 import connection.lcp.state.Closed;
 import connection.lcp.state.ConnectionState;
 import connection.lcp.state.Established;
+import connection.lcp.state.FinSent;
 import connection.lcp.state.Initialized;
 import connection.lcp.state.SynReceived;
 import connection.lcp.state.SynSent;
@@ -22,7 +23,7 @@ import connection.lcp.strategies.WaitForAckStrategy;
 public class LcpConnection implements Runnable {
 	private static ArrayList<Class<? extends AbstractConnectionState> > stateList =
 			new ArrayList<>(Arrays.asList(Initialized.class, SynSent.class, SynReceived.class,
-					Established.class, Closed.class));
+					Established.class, Closed.class, FinSent.class));
 	
 	// LCP Connection attributes
 	private ConnectionHandler handler;
@@ -32,7 +33,6 @@ public class LcpConnection implements Runnable {
 	private InetAddress otherIP;
 	private FileObject file;
 	private short virtualCircuitID;
-	protected boolean downloadCompleted;
 	protected boolean transmissionCompleted;
 	
 	// States
@@ -98,15 +98,11 @@ public class LcpConnection implements Runnable {
 	}
 	
 	public boolean downloadCompleted() {
-		return downloadCompleted;
+		return getFile().checkFileChecksum();
 	}
 	
 	public boolean transmissionCompleted() {
 		return transmissionCompleted;
-	}
-	
-	public void setDownloadCompleted() {
-		downloadCompleted = true;
 	}
 	
 	public void setTransmissionCompleted() {
@@ -151,7 +147,7 @@ public class LcpConnection implements Runnable {
 		for (int i = 0; i < stateList.size(); i++) {
 			Class<? extends AbstractConnectionState> stateClass = stateList.get(i);
 			try {
-				AbstractConnectionState state = (AbstractConnectionState) (stateClass.getConstructors()[0]).newInstance(this, file);
+				AbstractConnectionState state = (AbstractConnectionState) (stateClass.getConstructors()[0]).newInstance(this);
 				states.put(stateClass, state);
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | SecurityException e) {

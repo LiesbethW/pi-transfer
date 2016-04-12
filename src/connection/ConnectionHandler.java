@@ -60,35 +60,33 @@ public class ConnectionHandler implements Runnable {
 	}
 	
 	private void handlePackets() {
-		while (true) {
-			LcpPacket packet = UDPClient.dequeuePacket(500);
-			if (packet != null) {
-				packet.print();
-				
-				if (packet.isHeartbeat()) {
-					int berryId = packet.getSourceId();
-					Date timestamp = packet.getTimestamp();
-					ArrayList<String> files = packet.getFileList();
-					transmitter.processHeartbeat(berryId, timestamp, files);
-				} else if (packet.getDestination().equals(bcastAddress)) {
-					general.process(packet);
-				} else if (packet.getDestination().equals(myAddress)) {
-					short vcid = packet.getVCID();
-					if (lcpConnections.containsKey(vcid)) {
-						System.out.format("Process with id %d and in state %s received packet\n",
-								vcid, lcpConnections.get(vcid).getState().toString());
-						lcpConnections.get(vcid).digest(packet);
-					} else {
-						System.out.println("VCID " + vcid + " is not yet known, I'm starting a new connection.");
-						LcpConnection connection = this.createNewLcpConnection(vcid, packet.getSource());
-						connection.digest(packet);
-					}
+		LcpPacket packet = UDPClient.dequeuePacket(500);
+		if (packet != null) {
+			System.out.println(":: Received ::");
+			packet.print();
+			
+			if (packet.isHeartbeat()) {
+				int berryId = packet.getSourceId();
+				Date timestamp = packet.getTimestamp();
+				ArrayList<String> files = packet.getFileList();
+				transmitter.processHeartbeat(berryId, timestamp, files);
+			} else if (packet.getDestination().equals(bcastAddress)) {
+				general.process(packet);
+			} else if (packet.getDestination().equals(myAddress)) {
+				short vcid = packet.getVCID();
+				if (lcpConnections.containsKey(vcid)) {
+					System.out.format("Process with id %d and in state %s received packet\n",
+							vcid, lcpConnections.get(vcid).getState().toString());
+					lcpConnections.get(vcid).digest(packet);
 				} else {
-					System.out.println("This packet is not for me:");
-					packet.print();
+					System.out.println("VCID " + vcid + " is not yet known, I'm starting a new connection.");
+					LcpConnection connection = this.createNewLcpConnection(vcid, packet.getSource());
+					connection.digest(packet);
 				}
-				
+			} else {
+				System.out.println("This packet is not for me.");
 			}
+			
 		}
 	}
 	
@@ -107,22 +105,38 @@ public class ConnectionHandler implements Runnable {
 		if (connectionToRemove != -1) { 
 			if (lcpConnections.get(connectionToRemove).downloadCompleted()) {
 				FileObject file = lcpConnections.get(connectionToRemove).getFile();
+				System.out.format("Download completed, saving file %s", file.getName());
 				transmitter.saveFile(file);
 			}
+			System.out.format("Removing connection %d\n", connectionToRemove);
 			lcpConnections.remove(connectionToRemove);
 		}
 	}
 	
+	/**
+	 * Send a packet to the client.
+	 * @param lcpp
+	 */
 	public void send(LcpPacket lcpp) {
 		UDPClient.enqueue(lcpp);
 	}
 	
+	/**
+	 * Create and transmit a heartbeat message
+	 */
 	private void sayHello() {
 		LcpPacket heartbeat = new LcpPacket();
 		heartbeat.setHeartbeat(transmitter.listLocalFiles());
 		this.send(heartbeat);
 	}
 	
+	/**
+	 * Generate a vcid: it is a short (two bytes), of which the
+	 * first is the id of this device and the second a random byte
+	 * that is not in use yet. This guarantees a unique vcid for this
+	 * network.
+	 * @return
+	 */
 	private short generateVCID() {
 		short vcid = 0;
 		while (vcid == 0) {

@@ -29,11 +29,14 @@ public class FileController implements FileStore {
 	
 	public FileController() {
 		transmitter = new BerryPicker(this);
+		Thread transmissionThread = new Thread(transmitter);
+		transmissionThread.start();
 	}
 	
-	public void upload(String filename) {
-		byte[] fileContent = FileHelper.getFileContents(filename);
-		transmitter.uploadFile(fileContent, filename);
+	public void upload(String pathName) {
+		byte[] fileContent = FileHelper.getFileContents(pathName);
+		String fileName = FileHelper.getFilename(pathName);
+		transmitter.uploadFile(fileContent, fileName);
 	}
 	
 	public void download(String filename) {

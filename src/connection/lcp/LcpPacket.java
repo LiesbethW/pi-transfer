@@ -41,11 +41,19 @@ public class LcpPacket implements Protocol {
 	}
 	
 	public LcpPacket(DatagramPacket packet) {
-//		setPort(packet.getPort());
+		// Read the header
 		buffer = packet.getData();
-		data = new byte[buffer.length - HEADERLEN];
 		System.arraycopy(buffer, 0, header, 0, HEADERLEN);
+		
+		data = new byte[getContentLength()];
 		System.arraycopy(buffer, HEADERLEN, data, 0, data.length);
+		
+		// Make sure all header bytes and the like have been set before this
+		buffer = new byte[HEADERLEN + data.length];
+		System.arraycopy(header, 0, buffer, 0, HEADERLEN);
+		System.arraycopy(data, 0, buffer, HEADERLEN, data.length);
+		
+		System.out.format("Content length of packet: %d\n", data.length);
 		this.deSerializeMessage();
 	}
 	
@@ -141,6 +149,12 @@ public class LcpPacket implements Protocol {
 		return ByteUtils.bytesToShort(vcid);
 	}
 	
+	public short getContentLength() {
+		byte[] contentLength = new byte[Short.BYTES];
+		System.arraycopy(header, CONTENT_LENGTH, contentLength, 0, Short.BYTES);
+		return ByteUtils.bytesToShort(contentLength);
+	}
+	
 	public byte getSequenceNumber() {
 		return header[SEQUENCE_NUMBER];
 	}
@@ -167,6 +181,14 @@ public class LcpPacket implements Protocol {
 			return Integer.valueOf(options.get(TOTAL_LENGTH));
 		} else {
 			return 0;
+		}
+	}
+	
+	public int getBytesPerPart() {
+		if (options.containsKey(BYTES_PER_PART)) {
+			return Integer.valueOf(options.get(BYTES_PER_PART));
+		} else {
+			return FileObject.DEFAULT_LENGTH;
 		}
 	}
 	
@@ -269,13 +291,22 @@ public class LcpPacket implements Protocol {
 	}
 	
 	public DatagramPacket datagram() {
+		// Set version
 		setVersion();
+		
+		// Set content length
+		setContentLength();
 		
 		// Make sure all header bytes and the like have been set before this
 		buffer = new byte[HEADERLEN + data.length];
 		System.arraycopy(header, 0, buffer, 0, HEADERLEN);
 		System.arraycopy(data, 0, buffer, HEADERLEN, data.length);
+		
+		// Set the checksum
 		setChecksum();
+		
+		System.out.println(":: Created packet to send ::");
+		this.print();
 		
 		packet = new DatagramPacket(buffer, buffer.length);
 		packet.setAddress(address);
@@ -285,6 +316,11 @@ public class LcpPacket implements Protocol {
 	
 	private void setVersion() {
 		header[0] = (byte) VERSION;
+	}
+	
+	private void setContentLength() {
+		byte[] contentLength = ByteUtils.shortToBytes((short) this.getData().length);
+		System.arraycopy(contentLength, 0, header, CONTENT_LENGTH, contentLength.length);
 	}
 	
 	public boolean checkChecksum() {
@@ -297,9 +333,9 @@ public class LcpPacket implements Protocol {
 	}
 	
 	private long getChecksum() {
-		byte[] checksumBytes = new byte[Long.BYTES];
+		byte[] checksumBytes = new byte[4];
 		System.arraycopy(buffer, PACKET_CHECKSUM_FIELD, checksumBytes, 0, checksumBytes.length);
-		return ByteUtils.bytesToLong(checksumBytes);
+		return ByteUtils.fourBytesToLong(checksumBytes);
 	}
 	
 	private void setChecksum() {
@@ -318,17 +354,15 @@ public class LcpPacket implements Protocol {
 	}
 	
 	private void setChecksumField(long checksum) {
-		byte[] checksumBytes = ByteUtils.longToBytes(checksum);
+		byte[] checksumBytes = ByteUtils.longToFourBytes(checksum);
 		System.arraycopy(checksumBytes, 0, buffer, PACKET_CHECKSUM_FIELD, checksumBytes.length);
 	}
 	
 	private String serializeFileInfo(FileObject file) {
 		String fileName = String.join(DELIMITER2, FILENAME, file.getName());
 		String totalLength = String.join(DELIMITER2, TOTAL_LENGTH, String.valueOf(file.getLength()));
-		checksumCalculator.reset();
-		checksumCalculator.update(file.getContent());
-		long checksum = checksumCalculator.getValue();
-		String fileChecksum = String.join(DELIMITER2, FILE_CHECKSUM, String.valueOf(checksum));
+		String fileChecksum = String.join(DELIMITER2, FILE_CHECKSUM, String.valueOf(file.getFileChecksum()));
+		String bytesPerPartString = String.join(DELIMITER2, BYTES_PER_PART, String.valueOf(file.getBytesPerPart()));
 		return String.join(DELIMITER, fileName, totalLength, fileChecksum);		
 	}
 	
@@ -362,10 +396,11 @@ public class LcpPacket implements Protocol {
 		System.out.println("-----------PACKET------------");
 		System.out.println("-----------HEADER------------");
 		System.out.format("Flag: %d\n", this.getFlag());
-		System.out.format("Destination: %x\n", header[DESTINATION_FIELD]);
+		System.out.format("Destination: %s\n", this.getDestination().toString());
 		System.out.format("Source: %s\n", this.getSource().toString());
 		System.out.format("VCID: %d\n", this.getVCID());
-		System.out.format("Sequence Number", this.getSequenceNumber());
+		System.out.format("Content length: %d\n", this.getContentLength());
+		System.out.format("Sequence Number: %d\n", this.getSequenceNumber());
 		System.out.println("-----------CONTENT-----------");
 		System.out.println(this.getMessage());
 	}

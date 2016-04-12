@@ -1,12 +1,11 @@
 package connection.lcp.state;
 
-import berryPicker.FileObject;
 import connection.lcp.LcpConnection;
 import connection.lcp.LcpPacket;
 
 public class Closed extends AbstractConnectionState {
 
-	public Closed(LcpConnection connection, FileObject fileObject) {
+	public Closed(LcpConnection connection) {
 		super(connection);
 	}
 	

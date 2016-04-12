@@ -70,10 +70,6 @@ public abstract class AbstractConnectionState implements ConnectionState {
 		return connection.transmissionCompleted();
 	}
 	
-	public void setDownloadCompleted() {
-		connection.setDownloadCompleted();
-	}
-	
 	public void setTransmissionCompleted() {
 		connection.setTransmissionCompleted();
 	}

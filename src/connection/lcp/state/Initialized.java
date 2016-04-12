@@ -1,6 +1,5 @@
 package connection.lcp.state;
 
-import berryPicker.FileObject;
 import connection.lcp.LcpConnection;
 import connection.lcp.LcpPacket;
 import connection.lcp.Protocol;
@@ -10,7 +9,7 @@ import connection.lcp.commands.SendSynAck;
 public class Initialized extends AbstractConnectionState {
 	public static int START_FLAG = 0;
 	
-	public Initialized(LcpConnection connection, FileObject fileObject) {
+	public Initialized(LcpConnection connection) {
 		super(connection);
 	}
 	

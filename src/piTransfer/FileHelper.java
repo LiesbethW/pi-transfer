@@ -17,8 +17,8 @@ public class FileHelper {
 	 * @return the array of integers, representing the contents of the file to
 	 *         transmit
 	 */
-	public static byte[] getFileContents(String filename) {
-		File fileToTransmit = new File(filename);
+	public static byte[] getFileContents(String pathName) {
+		File fileToTransmit = new File(pathName);
 		try (FileInputStream fileStream = new FileInputStream(fileToTransmit)) {
 			byte[] fileContents = new byte[(int) fileToTransmit.length()];
 
@@ -36,6 +36,11 @@ public class FileHelper {
 			System.err.println(e.getStackTrace());
 			return null;
 		}
+	}
+	
+	public static String getFilename(String pathName) {
+		File fileToTransmit = new File(pathName);
+		return fileToTransmit.getName();
 	}
 	
 	/**

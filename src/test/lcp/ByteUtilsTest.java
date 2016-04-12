@@ -36,4 +36,13 @@ public class ByteUtilsTest {
 		assertEquals(i, i2);
 	}
 	
+	@Test
+	public void testLongToFourBytes() {
+		long l = 23415634;
+		byte[] bytes = ByteUtils.longToFourBytes(l);
+		assertEquals(4, bytes.length);
+		long l2 = ByteUtils.fourBytesToLong(bytes);
+		assertEquals(l, l2);
+	}
+	
 }

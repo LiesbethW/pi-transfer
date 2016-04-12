@@ -1,6 +1,9 @@
 package connection.lcp.state;
 
 import connection.lcp.LcpConnection;
+import connection.lcp.Protocol;
+import connection.lcp.commands.CloseConnection;
+import connection.lcp.commands.ProcessFin;
 
 public class FinSent extends AbstractConnectionState {
 
@@ -10,8 +13,8 @@ public class FinSent extends AbstractConnectionState {
 	}
 	@Override
 	protected void initializeTransitionMap() {
-		// TODO Auto-generated method stub
-		
+		transitionMap.put(Protocol.FIN_ACK, new CloseConnection());
+		transitionMap.put(Protocol.FIN, new ProcessFin());
 	}
 
 }

@@ -4,14 +4,21 @@ import connection.lcp.LcpConnection;
 import connection.lcp.LcpPacket;
 
 public class WaitForAckStrategy extends TransmissionStrategy {
-	byte lastSequenceNumberSent = -1;
-	int lastPacketSent = -1;
+	byte lastSequenceNumberSent;
+	int lastPacketSent;
 	
-	byte lastSequenceNumberReceived = -1;
-	int lastPacketSaved = -1;
+	byte lastSequenceNumberReceived;
+	int lastPacketSaved;
 	
 	public WaitForAckStrategy(LcpConnection connection) {
 		super(connection);
+		lastSequenceNumberSent = -1;
+		lastPacketSent = -1;
+		
+		lastSequenceNumberReceived = -1;
+		lastPacketSaved = -1;
+		
+		System.out.format("Last sn received: %x\n", lastSequenceNumberReceived);
 	}
 	
 	public void startTransmission() {
@@ -27,10 +34,12 @@ public class WaitForAckStrategy extends TransmissionStrategy {
 	@Override
 	public void handleAck(LcpPacket packet) {
 		if (packet.getSequenceNumber() == lastSequenceNumberSent) {
-			if (lastPacketSent >= connection().getFile().numberOfParts()) {
+			if (lastPacketSent >= connection().getFile().lastPart()) {
 				this.connection().setTransmissionCompleted();
 			} else {
-				this.sendPart(lastSequenceNumberSent++, lastPacketSent++);
+				lastSequenceNumberSent++;
+				lastPacketSent++;
+				this.sendPart(lastSequenceNumberSent, lastPacketSent);
 			}
 		}
 
@@ -39,11 +48,13 @@ public class WaitForAckStrategy extends TransmissionStrategy {
 	@Override
 	public void handleFilePart(LcpPacket packet) {
 		System.out.println("Handling file part");
+		System.out.format("Sequence number: %x, last sn received + 1: %x\n", 
+				packet.getSequenceNumber(), (byte) lastSequenceNumberReceived + 1);
 		if (packet.getSequenceNumber() == (byte) lastSequenceNumberReceived + 1) {
 			savePart(packet.getData(), lastPacketSaved + 1);
 			lastSequenceNumberReceived++;
 			lastPacketSaved++;
-			sendAck(lastSequenceNumberReceived);
+			this.sendAck(lastSequenceNumberReceived);
 		}
 	}
 

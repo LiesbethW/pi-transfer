@@ -10,16 +10,18 @@ public class FileObject {
 	private String name;
 	private byte[] content;
 	private InetAddress destination;
-	private int bytesPerPart = DEFAULT_LENGTH;
+	private int bytesPerPart;
 	private long checksum;
 	
 	public FileObject() {
+		this(null, null);
 		this.setEmptyContent(0);
 	}
 	
 	public FileObject(byte[] content, String name) {
 		setContent(content);
 		setName(name);
+		setBytesPerPart(DEFAULT_LENGTH);
 	}
 	
 	public byte[] getContent() {
@@ -87,7 +89,10 @@ public class FileObject {
 		return (int) Math.ceil((double) getLength()/bytesPerPart);
 	}
 	
-	// setPart(int sequenceNumber, int bytesPerPart),
+	public int lastPart() {
+		return numberOfParts() - 1;
+	}
+	
 	// getChecksum(), setChecksum. encrypt(), decrypt(), compress(), decompress()
 	
 	public void setContent(byte[] content) {
@@ -104,11 +109,13 @@ public class FileObject {
 	
 	public boolean setPart(byte[] data, int sequenceNumber, int bytesPerPart) {
 		int offset = sequenceNumber*bytesPerPart;
-		int ending = (sequenceNumber + 1)*bytesPerPart;
+		int ending = offset + data.length;
 		if (content == null || ending > getLength()) {
+			System.out.println("Cannot write data into file content: it's too big!");
 			return false;
 		} else {
 			System.arraycopy(data, 0, content, offset, data.length);
+			System.out.format("Now the content is: %s\n", new String(getContent()));
 			return true;
 		}
 	}
@@ -125,17 +132,25 @@ public class FileObject {
 		this.bytesPerPart = bytesPerPart;
 	}
 	
+	public long getFileChecksum() {
+		checksumCalculator.reset();
+		checksumCalculator.update(this.getContent());
+		return checksumCalculator.getValue();
+	}
+	
 	public void setFileChecksum(long checksum) {
 		this.checksum = checksum;
 	}
 	
 	public boolean checkFileChecksum() {
 		if (checksum == 0) {
+			System.out.println("Checksum was never set.");
 			return false;
 		} else {
-			checksumCalculator.reset();
-			checksumCalculator.update(this.getContent());
-			long calculatedChecksum = checksumCalculator.getValue();
+			long calculatedChecksum = this.getFileChecksum();
+			
+			System.out.format("Checksum was %d, calculated checksum is %d.\n",
+					checksum, calculatedChecksum);
 			return calculatedChecksum == checksum;
 		}
 		

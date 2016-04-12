@@ -104,8 +104,16 @@ public class Client {
 					
 					if (receivedPacket.getAddress().getHostAddress()
 							.equals(Utilities.getMyInetAddress().getHostAddress())) {
+						// Ignore my own packet
 					} else {
-						receivedPacketQueue.offer(new LcpPacket(receivedPacket));
+						
+						LcpPacket lcpp = new LcpPacket(receivedPacket);
+						if (lcpp.checkChecksum()) {
+							receivedPacketQueue.offer(lcpp);
+						} else {
+							lcpp.print();
+							System.out.println("Packet checksum was wrong: drop packet");
+						}
 					}
 				}
 			} catch (IOException e) {

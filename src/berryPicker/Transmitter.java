@@ -3,7 +3,7 @@ package berryPicker;
 import java.util.ArrayList;
 import java.util.Date;
 
-public interface Transmitter {
+public interface Transmitter extends Runnable {
 
 	// Interface towards FileController
 	public abstract void uploadFile(byte[] contents, String filename);

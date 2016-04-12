@@ -13,7 +13,7 @@ import connection.ConnectionHandler;
 import connection.Utilities;
 import piTransfer.FileStore;
 
-public class BerryPicker implements Runnable, Transmitter {
+public class BerryPicker implements Transmitter {
 	private FileStore store;
 	private ConnectionHandler connectionHandler;
 	private BlockingQueue<FileObject> receivedFiles = new LinkedBlockingQueue<FileObject>();

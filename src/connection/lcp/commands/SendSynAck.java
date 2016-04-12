@@ -1,6 +1,5 @@
 package connection.lcp.commands;
 
-import berryPicker.FileObject;
 import connection.lcp.LcpPacket;
 import connection.lcp.state.AbstractConnectionState;
 import connection.lcp.state.ConnectionState;
@@ -11,10 +10,10 @@ public class SendSynAck implements Command {
 	@Override
 	public Class<? extends AbstractConnectionState> runCommand(LcpPacket lcpp, ConnectionState state) {
 		// Process the file and source information
-		FileObject file = state.getFile();
-		file.setName(lcpp.getFileName());
-		file.setEmptyContent(lcpp.getTotalLength());
-		file.setFileChecksum(lcpp.getFileChecksum());
+		state.getFile().setName(lcpp.getFileName());
+		state.getFile().setEmptyContent(lcpp.getTotalLength());
+		state.getFile().setFileChecksum(lcpp.getFileChecksum());
+		state.getFile().setBytesPerPart(lcpp.getBytesPerPart());
 		
 		// Create and send synack message
 		LcpPacket synAckPacket = new LcpPacket();

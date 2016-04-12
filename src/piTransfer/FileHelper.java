@@ -2,6 +2,7 @@ package piTransfer;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,16 +18,20 @@ public class FileHelper {
 	 * @return the array of integers, representing the contents of the file to
 	 *         transmit
 	 */
-	public static byte[] getFileContents(String pathName) {
+	public static byte[] getFileContents(String pathName) throws FileNotFoundException {
 		File fileToTransmit = new File(pathName);
+		if (!fileToTransmit.exists()) {
+			throw new FileNotFoundException(String.format("There is not file at %s", 
+					fileToTransmit.getAbsolutePath()));
+		}
 		try (FileInputStream fileStream = new FileInputStream(fileToTransmit)) {
 			byte[] fileContents = new byte[(int) fileToTransmit.length()];
 
 			for (int i = 0; i < fileContents.length; i++) {
 				byte nextByte = (byte) fileStream.read();
-				if (nextByte == -1) {
-					throw new Exception("File size is smaller than reported");
-				}
+//				if (nextByte == -1) {
+//					throw new Exception("File size is smaller than reported");
+//				}
 
 				fileContents[i] = nextByte;
 			}

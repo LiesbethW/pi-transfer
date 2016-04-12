@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -21,7 +22,7 @@ public class FileObjectTest {
 	private File file;
 	
 	@Before
-	public void setUp() {
+	public void setUp() throws FileNotFoundException {
 		file = new File(fullFileName);
 		fileObject = new FileObject(FileHelper.getFileContents(fullFileName), fileName);
 	}

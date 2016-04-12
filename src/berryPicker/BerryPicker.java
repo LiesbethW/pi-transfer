@@ -23,7 +23,6 @@ public class BerryPicker implements Transmitter {
 	public BerryPicker(FileStore store) {
 		try {
 			this.store = store;
-			availableFiles.put(Utilities.getMyId(), store.listLocalFiles());
 			connectionHandler = new ConnectionHandler(this);
 			Thread thread = new Thread(connectionHandler);
 			thread.start();
@@ -33,6 +32,9 @@ public class BerryPicker implements Transmitter {
 		
 	}
 	
+	/**
+	 * While running, see if there are received files to save.
+	 */
 	public void run() {
 		while(true) {
 			FileObject receivedFile;
@@ -48,15 +50,23 @@ public class BerryPicker implements Transmitter {
 		}
 	}
 	
+	/**
+	 * Upload the file to the selected device
+	 * @param fileContents
+	 * @param fileName
+	 * @param berryId
+	 */
 	public void uploadFile(byte[] fileContents, String fileName, int berryId) {
 		FileObject file = new FileObject(fileContents, fileName);
 		file.setDestination(getBerryById(berryId));
 		connectionHandler.transmitFile(file);
 	}
 	
+	/**
+	 * Upload the file to the 
+	 */
 	public void uploadFile(byte[] fileContents, String fileName) {
-		int berryId = 2;
-		this.uploadFile(fileContents, fileName, berryId);
+		this.uploadFile(fileContents, fileName, berryLastHeardOf());
 	}
 	
 	public byte[] downloadFile(String filename) {
@@ -69,8 +79,8 @@ public class BerryPicker implements Transmitter {
 	}
 	
 	public boolean getFile(String filename, int berryId) {
-		if (store.listFiles().contains(filename)) {
-			this.uploadFile(store.get(filename), filename, berryId);
+		if (store.listRemoteFiles().contains(filename)) {
+			
 			return true;
 		} else {
 			return false;
@@ -101,6 +111,10 @@ public class BerryPicker implements Transmitter {
 		return store.listLocalFiles();
 	}
 	
+	public ArrayList<Integer> listDevices() {
+		return new ArrayList<Integer>(berries.keySet());
+	}
+	
 	/**
 	 * For ease of testing
 	 * @return
@@ -111,6 +125,18 @@ public class BerryPicker implements Transmitter {
 	
 	private InetAddress getBerryById(int berryId) {
 		return connection.Utilities.getInetAddressEndingWith(berryId);
+	}
+	
+	private int berryLastHeardOf() {
+		int lastHeartbeatBerry = 255;
+		Date lastDate = new Date(0);
+		for (Integer berry : berries.keySet()) {
+			if (berries.get(berry).after(lastDate)) {
+				lastDate = berries.get(berry);
+				lastHeartbeatBerry = berry;
+			}
+		}
+		return lastHeartbeatBerry;
 	}
 	
 	

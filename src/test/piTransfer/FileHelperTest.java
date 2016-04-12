@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 import org.junit.After;
@@ -18,7 +19,7 @@ public class FileHelperTest {
 	private byte[] fileContents;
 	
 	@Test
-	public void testReadingAndWriting() {
+	public void testReadingAndWriting() throws FileNotFoundException {
 		fileContents = FileHelper.getFileContents(input);
 		assertNotNull(fileContents);
 		File result = new File(FileHelper.FILE_DIR + File.separator + output);

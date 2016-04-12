@@ -1,30 +1,12 @@
 package piTransfer;
 
-import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 import berryPicker.BerryPicker;
 import berryPicker.Transmitter;
 
 public class FileController implements FileStore {
-	
-	public static void main(String[] args) {
-		FileController piTransfer = new FileController();
-		
-		// Create a file for testing purposes
-		String filename = String.format("example_file_%d.txt", (int) (Math.random()*10000));
-		byte[] fileContents = "My super duper file content.".getBytes();
-		piTransfer.save(fileContents, filename);
-		String filePath = String.join(File.separator, FileHelper.FILE_DIR, filename);
-		
-		// Upload that file
-		piTransfer.upload(filePath);
-		
-		// Clean up the file afterwards
-		File file = new File(filePath);
-		file.delete();
-	}
-	
 	private Transmitter transmitter;
 	
 	public FileController() {
@@ -33,7 +15,7 @@ public class FileController implements FileStore {
 		transmissionThread.start();
 	}
 	
-	public void upload(String pathName) {
+	public void upload(String pathName) throws FileNotFoundException {
 		byte[] fileContent = FileHelper.getFileContents(pathName);
 		String fileName = FileHelper.getFilename(pathName);
 		transmitter.uploadFile(fileContent, fileName);
@@ -43,10 +25,18 @@ public class FileController implements FileStore {
 		transmitter.downloadFile(filename);
 	}
 	
-	public ArrayList<String> listFiles() {
-		ArrayList<String> files = listLocalFiles();
+	public ArrayList<String> listRemoteFiles() {
+		ArrayList<String> files = new ArrayList<String>();
 		files.addAll(transmitter.listRemoteFiles());
 		return files;
+	}
+	
+	public ArrayList<String> listDevices() {
+		ArrayList<String> devices = new ArrayList<String>();
+		for (Integer deviceId : transmitter.listDevices()) {
+			devices.add(String.valueOf(deviceId));
+		}
+		return devices;
 	}
 	
 	public void save(byte[] fileContents, String filename) {
@@ -54,7 +44,7 @@ public class FileController implements FileStore {
 		System.out.format("Wrote the file %s to disk\n", filename);
 	}
 	
-	public byte[] get(String filename) {
+	public byte[] get(String filename) throws FileNotFoundException {
 		return FileHelper.getFileContents(filename);
 	}
 	

@@ -1,21 +1,24 @@
 package piTransfer;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 public interface FileStore {
 
 	// Interface towards user interface
-	public abstract void upload(String filename);
+	public void upload(String filename) throws FileNotFoundException;
 	
-	public abstract void download(String filename);
+	public void download(String filename);
 	
-	public abstract ArrayList<String> listFiles();
+	public ArrayList<String> listRemoteFiles();
+	
+	public ArrayList<String> listDevices();
 	
 	// Interface towards transmitter layer
-	public abstract void save(byte[] fileContents, String fileName);
+	public void save(byte[] fileContents, String fileName);
 	
-	public abstract byte[] get(String fileName);
+	public byte[] get(String fileName) throws FileNotFoundException;
 	
-	public abstract ArrayList<String> listLocalFiles();
+	public ArrayList<String> listLocalFiles();
 	
 }

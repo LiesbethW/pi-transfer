@@ -1,18 +1,40 @@
 package berryPicker;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Date;
 
 public interface Transmitter extends Runnable {
 
-	// Interface towards FileStore
-	public void uploadFile(byte[] contents, String filename);
+	// Interface toward User Interface
+	/**
+	 * Request to upload a file
+	 * @param pathname
+	 * @return true if this task could be started, false if is is for example
+	 * already being uploaded, or if a choice for the berry needs to be 
+	 * made.
+	 */
+	public boolean upload(String pathname) throws FileNotFoundException;
 	
-	public byte[] downloadFile(String filename);
+	/**
+	 * Request to upload a file
+	 * @param pathname
+	 * @param berryId
+	 * @return false if the file is already being uploaded, the selected Rasberry Pi
+	 * is not available or the file could not be found. True if the task was started
+	 * @throws FileNotFoundException
+	 */
+	public boolean upload(String pathname, int berryId) throws FileNotFoundException;
+	
+	/**
+	 * Starts the download if it 
+	 * @param filename
+	 */
+	public boolean download(String filename);
 	
 	public ArrayList<String> listRemoteFiles();
 	
-	public ArrayList<Integer> listDevices();
+	public ArrayList<String> listDevices();
 
 	// Interface towards ConnectionHandler
 	

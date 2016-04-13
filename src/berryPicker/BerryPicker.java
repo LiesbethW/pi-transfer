@@ -13,9 +13,12 @@ import java.util.concurrent.TimeUnit;
 
 import connection.ConnectionHandler;
 import connection.Utilities;
+import piTransfer.FileController;
 import piTransfer.FileStore;
+import ui.InteractionController;
 
 public class BerryPicker implements Transmitter {
+	private InteractionController controller;
 	private FileStore store;
 	private ConnectionHandler connectionHandler;
 	private BlockingQueue<FileObject> receivedFiles = new LinkedBlockingQueue<FileObject>();
@@ -24,9 +27,10 @@ public class BerryPicker implements Transmitter {
 	private HashMap<Integer, Date> berries = new HashMap<Integer, Date>();
 	private ConcurrentHashMap<Integer, ArrayList<String>> availableFiles = new ConcurrentHashMap<Integer, ArrayList<String>>();
 	
-	public BerryPicker(FileStore store) {
+	public BerryPicker(InteractionController controller) {
 		try {
-			this.store = store;
+			this.controller = controller;
+			this.store = new FileController(this);
 			connectionHandler = new ConnectionHandler(this);
 			Thread thread = new Thread(connectionHandler);
 			thread.start();
@@ -41,16 +45,54 @@ public class BerryPicker implements Transmitter {
 	 */
 	public void run() {
 		while(true) {
-			FileObject receivedFile;
-			try {
-				receivedFile = receivedFiles.poll(1, TimeUnit.SECONDS);
-				if (receivedFile != null) {
-					store.save(receivedFile.getContent(), receivedFile.getName());
-					availableFiles.put(Utilities.getMyId(), store.listLocalFiles());
+			checkForFilesToSave();
+		}
+	}
+	
+	/**
+	 * Check if there are complete received files to save. Remove
+	 * those from the list of files to download if they were there.
+	 */
+	public void checkForFilesToSave() {
+		FileObject receivedFile;
+		try {
+			receivedFile = receivedFiles.poll(1, TimeUnit.SECONDS);
+			if (receivedFile != null) {
+				store.save(receivedFile.getContent(), receivedFile.getName());
+				availableFiles.put(Utilities.getMyId(), store.listLocalFiles());
+				if (filesToDownload.containsKey(receivedFile.getName())) {
+					filesToDownload.remove(receivedFile.getName());
 				}
-			} catch (InterruptedException e) {
-				e.printStackTrace();
 			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}		
+	}
+	
+	public boolean upload(String pathname) {
+		if (berries.size() < 1) {
+			controller.displayError("There are no Raspberry Pies available to upload this file to.");
+			return false;
+		} else if (berries.size() > 1) {
+			controller.displayError("There are multiple devices available. Please use \"PUT filename device\".");
+			return false;
+		} else {
+			this.upload(pathname, this.berryLastHeardOf());
+		}
+		return true;
+	}
+
+	public boolean upload(String pathname, int berryId) {
+		if (filesToUpload.containsKey(pathname) && filesToUpload.get(pathname).equals(berryId)) {
+			controller.displayError("This file is already being uploaded to this berry.");
+			return false;
+		} else {
+			try {
+				this.uploadFile(store.getContent(pathname), store.getFilename(pathname), berryId);
+			} catch (FileNotFoundException e) {
+				controller.displayError(String.format("The file at path %s could not be found", pathname));
+			}
+			return true;
 		}
 	}
 	
@@ -60,18 +102,11 @@ public class BerryPicker implements Transmitter {
 	 * @param fileName
 	 * @param berryId
 	 */
-	public void uploadFile(byte[] fileContents, String fileName, int berryId) {
+	private void uploadFile(byte[] fileContents, String fileName, int berryId) {
 		FileObject file = new FileObject(fileContents, fileName);
 		file.setDestination(getBerryById(berryId));
 		this.filesToUpload.put(file, berryId);
 		connectionHandler.transmitFile(file);
-	}
-	
-	/**
-	 * Upload the file to the berry that the last hearbeat was received of.
-	 */
-	public void uploadFile(byte[] fileContents, String fileName) {
-		this.uploadFile(fileContents, fileName, berryLastHeardOf());
 	}
 	
 	public byte[] downloadFile(String filename) {
@@ -88,9 +123,9 @@ public class BerryPicker implements Transmitter {
 	 * starting to upload the file.
 	 */
 	public boolean getFile(String filename, int berryId) {
-		if (store.listRemoteFiles().contains(filename)) {
+		if (this.listLocalFiles().contains(filename)) {
 			try {
-				this.uploadFile(store.get(filename), filename, berryId);
+				this.uploadFile(store.getContent(filename), filename, berryId);
 				return true;				
 			} catch (FileNotFoundException e) {
 				return false;
@@ -100,6 +135,15 @@ public class BerryPicker implements Transmitter {
 		}
 	}
 	
+	public boolean download(String filename) {
+		
+		return false;
+	}
+	
+	/**
+	 * Use the incoming heartbeat to update the list of known Raspberry Pies
+	 * and the files they claim to have.
+	 */
 	public void processHeartbeat(int berryId, Date timestamp, ArrayList<String> files) {
 		if (berries.containsKey(berryId)) {
 			if (berries.get(berryId).before(timestamp)) {
@@ -112,6 +156,10 @@ public class BerryPicker implements Transmitter {
 		}
 	}
 	
+	/**
+	 * List the files that other Raspberry Pies have advertised that
+	 * they have.
+	 */
 	public ArrayList<String> listRemoteFiles() {
 		ArrayList<String> allFiles = new ArrayList<String>();
 		for (Integer berryId : availableFiles.keySet()) {
@@ -120,12 +168,23 @@ public class BerryPicker implements Transmitter {
 		return allFiles;
 	}
 	
+	/**
+	 * List the files in the local file store.
+	 */
 	public ArrayList<String> listLocalFiles() {
 		return store.listLocalFiles();
 	}
 	
-	public ArrayList<Integer> listDevices() {
-		return new ArrayList<Integer>(berries.keySet());
+	/**
+	 * Return the devices that a heartbeat was received of.
+	 */
+	public ArrayList<String> listDevices() {
+		ArrayList<Integer> ids = new ArrayList<Integer>(berries.keySet());
+		ArrayList<String> devices = new ArrayList<String>();
+		for (Integer deviceId : ids) {
+			devices.add(String.valueOf(deviceId));
+		}
+		return devices;
 	}
 	
 	/**

@@ -14,12 +14,9 @@ import berryPicker.Transmitter;
 import connection.ConnectionHandler;
 import connection.Utilities;
 import connection.lcp.LcpConnection;
-import piTransfer.FileController;
-import piTransfer.FileStore;
 
 
 public class LcpConnectionTest {
-	private FileStore store;
 	private Transmitter transmitter;
 	private ConnectionHandler handler;
 	private LcpConnection connection;
@@ -28,8 +25,7 @@ public class LcpConnectionTest {
 	
 	@Before
 	public void createConnection() throws IOException {
-		store = new FileController();
-		transmitter = ((FileController) store).getTransmitter();
+		transmitter = new BerryPicker(null);
 		handler = ((BerryPicker) transmitter).getConnectionHandler();
 		file = new FileObject("My file content.".getBytes(), "my_file.txt");
 		file.setDestination(Utilities.getInetAddressEndingWith(2));

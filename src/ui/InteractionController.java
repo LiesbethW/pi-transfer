@@ -3,8 +3,8 @@ package ui;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 
-import piTransfer.FileController;
-import piTransfer.FileStore;
+import berryPicker.BerryPicker;
+import berryPicker.Transmitter;
 
 public class InteractionController implements Runnable {
 	
@@ -14,13 +14,15 @@ public class InteractionController implements Runnable {
 		thread.start();
 	}
 	
-	private FileStore fileStore;
+	private Transmitter transmitter;
 	private View view;
 	private UserListener userListener;
 	private HashMap<String, Command> commands;
 	
 	public InteractionController() {
-		fileStore = new FileController();
+		transmitter = new BerryPicker(this);
+		Thread transmissionThread = new Thread(transmitter);
+		transmissionThread.start();
 		view = new TextualInterface(this);
 		userListener = new UserListener();
 		initializeCommands();
@@ -55,6 +57,10 @@ public class InteractionController implements Runnable {
 		return commands.keySet().toArray(options);
 	}
 	
+	public void displayError(String message) {
+		view.showError(message);
+	}
+	
 	private void requireFilename() {
 		view.showError("a file name is required");
 	}
@@ -77,7 +83,7 @@ public class InteractionController implements Runnable {
 				requireFilename();
 			} else {
 				try {
-					fileStore.upload(args[0]);
+					transmitter.upload(args[0]);
 				} catch(FileNotFoundException e) {
 					view.showError(e.getMessage());
 				}
@@ -91,8 +97,8 @@ public class InteractionController implements Runnable {
 				requireFilename();
 			} else {
 				String filename = args[0];
-				if (fileStore.listRemoteFiles().contains(filename)) {
-					fileStore.download(filename);
+				if (transmitter.listRemoteFiles().contains(filename)) {
+					transmitter.download(filename);
 				} else {
 					view.showError(String.format("The file %s is not available on PiTransfer.", filename));
 				}
@@ -103,13 +109,13 @@ public class InteractionController implements Runnable {
 	
 	private class ListRemoteFiles implements Command {
 		public void runCommand(String[] args) {
-			view.list(fileStore.listRemoteFiles());
+			view.list(transmitter.listRemoteFiles());
 		}
 	}
 	
 	private class ListDevices implements Command {
 		public void runCommand(String[] args) {
-			view.list(fileStore.listDevices());
+			view.list(transmitter.listDevices());
 		}
 	}
 }

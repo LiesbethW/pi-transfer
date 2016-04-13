@@ -4,7 +4,6 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -52,8 +51,6 @@ public class LcpPacket implements Protocol {
 		buffer = new byte[HEADERLEN + data.length];
 		System.arraycopy(header, 0, buffer, 0, HEADERLEN);
 		System.arraycopy(data, 0, buffer, HEADERLEN, data.length);
-		
-		System.out.format("Content length of packet: %d\n", data.length);
 		this.deSerializeMessage();
 	}
 	
@@ -194,12 +191,7 @@ public class LcpPacket implements Protocol {
 	
 	public Date getTimestamp() {
 		if (options.containsKey(TIMESTAMP)) {
-			try {
-				return dateFormat.parse(options.get(TIMESTAMP));
-			} catch (ParseException e) {
-				return new Date();
-			}
-			
+			return new Date(Long.valueOf((options.get(TIMESTAMP))));
 		} else {
 			return new Date();
 		}
@@ -374,7 +366,7 @@ public class LcpPacket implements Protocol {
 	}
 	
 	private String serializeHeartbeatInfo(ArrayList<String> files) {
-		String timestampString = String.join(DELIMITER2, TIMESTAMP, dateFormat.format(new Date()));
+		String timestampString = String.join(DELIMITER2, TIMESTAMP, String.valueOf((new Date()).getTime()));
 		String fileList = String.join(DELIMITER3, files);
 		String fileListString = String.join(DELIMITER2, FILES, fileList);
 		return String.join(DELIMITER, timestampString, fileListString);

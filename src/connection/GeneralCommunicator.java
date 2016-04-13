@@ -14,20 +14,23 @@ public class GeneralCommunicator {
 	}
 	
 	public void process(LcpPacket lcpp) {
-
+		if (lcpp.fileRequest()) {
+			this.processFileRequest(lcpp);
+		}
 	}
 	
-	public void sendFileRequest(String filename, InetAddress berry) {
-		int offset = 0;
-		sendFileRequest(filename, offset, berry);
-	}
-	
-	public void sendFileRequest(String filename, int offset, InetAddress berry) {
+	public void sendNewFileRequest(String filename, InetAddress berry) {
 		LcpPacket lcpp = new LcpPacket();
-		lcpp.setFileRequest(filename, offset, encryption);
+		lcpp.setFileRequest(filename, encryption);
+		lcpp.setDestination(berry, -1);
+		lcpp.setSource();
 		handler.send(lcpp);
 	}
 	
+	private void processFileRequest(LcpPacket lcpp) {
+		System.out.println("Processing file request");
+		handler.berryHandler().getFile(lcpp.getFileName(), lcpp.getSourceId());
+	}
 	
 	
 }

@@ -1,16 +1,17 @@
-package test.piTransfer;
+package test.filemanaging;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 import org.junit.After;
 import org.junit.Test;
 
-import piTransfer.FileHelper;
+import filemanaging.FileHelper;
 
 public class FileHelperTest {
 	private String input = "/Users/liesbeth.wijers/Desktop/input.txt";
@@ -18,7 +19,7 @@ public class FileHelperTest {
 	private byte[] fileContents;
 	
 	@Test
-	public void testReadingAndWriting() {
+	public void testReadingAndWriting() throws FileNotFoundException {
 		fileContents = FileHelper.getFileContents(input);
 		assertNotNull(fileContents);
 		File result = new File(FileHelper.FILE_DIR + File.separator + output);

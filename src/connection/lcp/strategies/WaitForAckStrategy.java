@@ -47,12 +47,10 @@ public class WaitForAckStrategy extends TransmissionStrategy {
 
 	@Override
 	public void handleFilePart(LcpPacket packet) {
-		System.out.println("Handling file part");
-		System.out.format("Sequence number: %x, last sn received + 1: %x\n", 
-				packet.getSequenceNumber(), (byte) lastSequenceNumberReceived + 1);
-		if (packet.getSequenceNumber() == (byte) lastSequenceNumberReceived + 1) {
+		if (packet.getSequenceNumber() == (byte) (lastSequenceNumberReceived + 1)) {
+			System.out.format("Saving sn %x as packet number %d\n", packet.getSequenceNumber(), lastPacketSaved + 1);
 			savePart(packet.getData(), lastPacketSaved + 1);
-			lastSequenceNumberReceived++;
+			lastSequenceNumberReceived = packet.getSequenceNumber();
 			lastPacketSaved++;
 			this.sendAck(lastSequenceNumberReceived);
 		}

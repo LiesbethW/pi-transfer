@@ -115,7 +115,6 @@ public class FileObject {
 			return false;
 		} else {
 			System.arraycopy(data, 0, content, offset, data.length);
-			System.out.format("Now the content is: %s\n", new String(getContent()));
 			return true;
 		}
 	}

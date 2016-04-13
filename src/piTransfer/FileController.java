@@ -3,13 +3,10 @@ package piTransfer;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
-import berryPicker.Transmitter;
-
 public class FileController implements FileStore {
-	private Transmitter transmitter;
 	
-	public FileController(Transmitter transmitter) {
-		this.transmitter = transmitter;
+	public FileController() {
+		
 	}
 	
 	public void save(byte[] fileContents, String filename) {
@@ -27,13 +24,5 @@ public class FileController implements FileStore {
 	
 	public ArrayList<String> listLocalFiles() {
 		return FileHelper.getFileNames();
-	}
-	
-	/**
-	 * For ease of testing
-	 * @return
-	 */
-	public Transmitter getTransmitter() {
-		return transmitter;
 	}
 }

@@ -12,15 +12,16 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import connection.ConnectionHandler;
+import connection.Transmitter;
 import connection.Utilities;
 import piTransfer.FileController;
 import piTransfer.FileStore;
 import ui.InteractionController;
 
-public class BerryPicker implements Transmitter {
+public class BerryPicker implements BerryHandler {
 	private InteractionController controller;
 	private FileStore store;
-	private ConnectionHandler connectionHandler;
+	private Transmitter connectionHandler;
 	private BlockingQueue<FileObject> receivedFiles = new LinkedBlockingQueue<FileObject>();
 	private ConcurrentHashMap<FileObject, Integer> filesToUpload = new ConcurrentHashMap<FileObject, Integer>();
 	private ConcurrentHashMap<String, Double> filesToDownload = new ConcurrentHashMap<String, Double>();
@@ -30,7 +31,7 @@ public class BerryPicker implements Transmitter {
 	public BerryPicker(InteractionController controller) {
 		try {
 			this.controller = controller;
-			this.store = new FileController(this);
+			this.store = new FileController();
 			connectionHandler = new ConnectionHandler(this);
 			Thread thread = new Thread(connectionHandler);
 			thread.start();
@@ -191,7 +192,7 @@ public class BerryPicker implements Transmitter {
 	 * For ease of testing
 	 * @return
 	 */
-	public ConnectionHandler getConnectionHandler() {
+	public Transmitter getConnectionHandler() {
 		return this.connectionHandler;
 	}
 	

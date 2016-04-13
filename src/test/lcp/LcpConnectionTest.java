@@ -8,29 +8,31 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import berryPicker.BerryHandler;
 import berryPicker.BerryPicker;
 import berryPicker.FileObject;
-import berryPicker.Transmitter;
 import connection.ConnectionHandler;
+import connection.Transmitter;
 import connection.Utilities;
 import connection.lcp.LcpConnection;
+import connection.lcp.LcpSender;
 
 
 public class LcpConnectionTest {
-	private Transmitter transmitter;
-	private ConnectionHandler handler;
+	private BerryHandler berryHandler;
+	private Transmitter handler;
 	private LcpConnection connection;
 	private FileObject file;
 	private short vcid;
 	
 	@Before
 	public void createConnection() throws IOException {
-		transmitter = new BerryPicker(null);
-		handler = ((BerryPicker) transmitter).getConnectionHandler();
+		berryHandler = new BerryPicker(null);
+		handler = ((BerryPicker) berryHandler).getConnectionHandler();
 		file = new FileObject("My file content.".getBytes(), "my_file.txt");
 		file.setDestination(Utilities.getInetAddressEndingWith(2));
 		vcid = 23987;
-		connection = new LcpConnection(handler, file, vcid, null);
+		connection = new LcpConnection((LcpSender) handler, file, vcid, null);
 	}
 	
 	@Test
@@ -48,7 +50,7 @@ public class LcpConnectionTest {
 	@After
 	public void closeSocket() throws InterruptedException {
 		Thread.sleep(500);
-		handler.getClient().kill();
+		((ConnectionHandler) handler).getClient().kill();
 	}
 	
 

@@ -9,13 +9,14 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import berryPicker.BerryHandler;
 import berryPicker.FileObject;
-import berryPicker.Transmitter;
 import connection.lcp.ByteUtils;
 import connection.lcp.LcpConnection;
 import connection.lcp.LcpPacket;
+import connection.lcp.LcpSender;
 
-public class ConnectionHandler implements Runnable {
+public class ConnectionHandler implements Transmitter, LcpSender {
 	private static long HEARTBEATINTERVAL = 10000;
 	
 	private InetAddress bcastAddress;
@@ -23,10 +24,10 @@ public class ConnectionHandler implements Runnable {
 	private Client UDPClient;
 	private GeneralCommunicator general;
 	private HashMap<Short, LcpConnection> lcpConnections;
-	private Transmitter transmitter;
+	private BerryHandler berryHandler;
 	
-	public ConnectionHandler(Transmitter transmitter) throws IOException {
-		this.transmitter = transmitter;
+	public ConnectionHandler(BerryHandler berryHandler) throws IOException {
+		this.berryHandler = berryHandler;
 		bcastAddress = Utilities.broadcastAddress();
 		myAddress = Utilities.getMyInetAddress();
 		int port = Utilities.getBroadcastPort();
@@ -69,7 +70,7 @@ public class ConnectionHandler implements Runnable {
 				int berryId = packet.getSourceId();
 				Date timestamp = packet.getTimestamp();
 				ArrayList<String> files = packet.getFileList();
-				transmitter.processHeartbeat(berryId, timestamp, files);
+				berryHandler.processHeartbeat(berryId, timestamp, files);
 			} else if (packet.getDestination().equals(bcastAddress)) {
 				general.process(packet);
 			} else if (packet.getDestination().equals(myAddress)) {
@@ -106,7 +107,7 @@ public class ConnectionHandler implements Runnable {
 			if (lcpConnections.get(connectionToRemove).downloadCompleted()) {
 				FileObject file = lcpConnections.get(connectionToRemove).getFile();
 				System.out.format("Download completed, saving file %s", file.getName());
-				transmitter.saveFile(file);
+				berryHandler.saveFile(file);
 			}
 			System.out.format("Removing connection %d\n", connectionToRemove);
 			lcpConnections.remove(connectionToRemove);
@@ -126,7 +127,7 @@ public class ConnectionHandler implements Runnable {
 	 */
 	private void sayHello() {
 		LcpPacket heartbeat = new LcpPacket();
-		heartbeat.setHeartbeat(transmitter.listLocalFiles());
+		heartbeat.setHeartbeat(berryHandler.listLocalFiles());
 		this.send(heartbeat);
 	}
 	

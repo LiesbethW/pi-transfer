@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import berryPicker.FileObject;
-import connection.ConnectionHandler;
 import connection.Utilities;
 import connection.lcp.state.AbstractConnectionState;
 import connection.lcp.state.Closed;
@@ -26,7 +25,7 @@ public class LcpConnection implements Runnable {
 					Established.class, Closed.class, FinSent.class));
 	
 	// LCP Connection attributes
-	private ConnectionHandler handler;
+	private LcpSender handler;
 	private ConnectionState state;
 	private TransmissionStrategy strategy;
 	private InetAddress myIP;
@@ -38,7 +37,7 @@ public class LcpConnection implements Runnable {
 	// States
 	private HashMap<Class<? extends AbstractConnectionState>, AbstractConnectionState> states;
 	
-	public LcpConnection(ConnectionHandler handler, FileObject file, short virtualCircuitID, InetAddress address) {
+	public LcpConnection(LcpSender handler, FileObject file, short virtualCircuitID, InetAddress address) {
 		myIP = Utilities.getMyInetAddress();
 		this.handler = handler;
 		if (file != null) {

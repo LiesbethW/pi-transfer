@@ -4,7 +4,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Date;
 
-public interface Transmitter extends Runnable {
+public interface BerryHandler extends Runnable {
 
 	// Interface toward User Interface
 	/**

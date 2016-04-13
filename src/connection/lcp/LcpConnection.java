@@ -16,8 +16,8 @@ import connection.lcp.state.FinSent;
 import connection.lcp.state.Initialized;
 import connection.lcp.state.SynReceived;
 import connection.lcp.state.SynSent;
+import connection.lcp.strategies.SlidingWindowStrategy;
 import connection.lcp.strategies.TransmissionStrategy;
-import connection.lcp.strategies.WaitForAckStrategy;
 
 public class LcpConnection implements Runnable {
 	private static ArrayList<Class<? extends AbstractConnectionState> > stateList =
@@ -27,7 +27,7 @@ public class LcpConnection implements Runnable {
 	// LCP Connection attributes
 	private LcpSender handler;
 	private ConnectionState state;
-	private TransmissionStrategy strategy;
+	protected TransmissionStrategy strategy;
 	private InetAddress myIP;
 	private InetAddress otherIP;
 	private FileObject file;
@@ -48,7 +48,7 @@ public class LcpConnection implements Runnable {
 			this.setSender(address);
 		}
 		this.virtualCircuitID = virtualCircuitID;
-		this.strategy = new WaitForAckStrategy(this);
+		this.strategy = new SlidingWindowStrategy(this);
 		initializeStates();
 		setState(Initialized.class);
 	}

@@ -62,9 +62,6 @@ public class ConnectionHandler implements Transmitter, LcpSender {
 	private void handlePackets() {
 		LcpPacket packet = UDPClient.dequeuePacket(500);
 		if (packet != null) {
-			System.out.println(":: Received ::");
-			packet.print();
-			
 			if (packet.isHeartbeat()) {
 				int berryId = packet.getSourceId();
 				Date timestamp = packet.getTimestamp();

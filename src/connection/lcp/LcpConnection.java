@@ -33,6 +33,7 @@ public class LcpConnection implements Runnable {
 	private FileObject file;
 	private short virtualCircuitID;
 	protected boolean transmissionCompleted;
+	protected int timeOuts;
 	
 	// States
 	private HashMap<Class<? extends AbstractConnectionState>, AbstractConnectionState> states;
@@ -106,6 +107,22 @@ public class LcpConnection implements Runnable {
 	
 	public void setTransmissionCompleted() {
 		transmissionCompleted = true;
+	}
+	
+	public int timeOuts() {
+		return timeOuts;
+	}
+	
+	public void timeOut() {
+		timeOuts++;
+	}
+	
+	public void resetTimeOuts() {
+		timeOuts = 0;
+	}
+	
+	public boolean maxTimeOutsReached() {
+		return state.maxTimeoutsReached();
 	}
 	
 	public FileObject getFile() {

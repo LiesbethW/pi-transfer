@@ -4,17 +4,16 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 public class ByteUtils {
-    private static ByteBuffer longBuffer = ByteBuffer.allocate(Long.BYTES);
-    private static ByteBuffer shortBuffer = ByteBuffer.allocate(Short.BYTES);
-    private static ByteBuffer intBuffer = ByteBuffer.allocate(Integer.BYTES);
     
     public static byte[] longToBytes(long x) {
+    	ByteBuffer longBuffer = ByteBuffer.allocate(Long.BYTES);
     	longBuffer.clear();
         longBuffer.putLong(0, x);
         return longBuffer.array();
     }
 
     public static long bytesToLong(byte[] bytes) {
+    	ByteBuffer longBuffer = ByteBuffer.allocate(Long.BYTES);
         longBuffer.clear();
     	longBuffer.put(bytes, 0, bytes.length);
         longBuffer.flip();//need flip 
@@ -22,12 +21,14 @@ public class ByteUtils {
     }
     
     public static byte[] shortToBytes(short x) {
+    	ByteBuffer shortBuffer = ByteBuffer.allocate(Short.BYTES);
     	shortBuffer.clear();
     	shortBuffer.putShort(x);
     	return shortBuffer.array();
     }
     
     public static short bytesToShort(byte[] bytes) {
+    	ByteBuffer shortBuffer = ByteBuffer.allocate(Short.BYTES);
     	shortBuffer.clear();
     	shortBuffer.put(bytes, 0, bytes.length);
     	shortBuffer.flip();
@@ -35,12 +36,14 @@ public class ByteUtils {
     }
     
     public static byte[] intToThreeBytes(int x) {
+    	ByteBuffer intBuffer = ByteBuffer.allocate(Integer.BYTES);
     	intBuffer.clear();
     	intBuffer.putInt(x);
     	return Arrays.copyOfRange(intBuffer.array(), 1, 4);
     }
     
     public static int threeBytesToInt(byte[] bytes) {
+    	ByteBuffer intBuffer = ByteBuffer.allocate(Integer.BYTES);
     	intBuffer.clear();
     	intBuffer.put((byte) 0);
     	intBuffer.put(bytes, 0, bytes.length);
@@ -49,6 +52,7 @@ public class ByteUtils {
     }
     
     public static byte[] longToFourBytes(long x) {
+    	ByteBuffer longBuffer = ByteBuffer.allocate(Long.BYTES);
     	longBuffer.clear();
         longBuffer.putLong(0, x);
         byte[] fourBytes = new byte[4];
@@ -57,6 +61,7 @@ public class ByteUtils {
     }
     
     public static long fourBytesToLong(byte[] bytes) {
+    	ByteBuffer longBuffer = ByteBuffer.allocate(Long.BYTES);
         longBuffer.clear();
     	byte[] paddingbytes = new byte[4];
     	longBuffer.put(paddingbytes);

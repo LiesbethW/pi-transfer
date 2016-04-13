@@ -1,4 +1,4 @@
-package piTransfer;
+package filemanaging;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -16,6 +16,10 @@ public class FileController implements FileStore {
 	
 	public byte[] getContent(String pathname) throws FileNotFoundException {
 		return FileHelper.getFileContents(pathname);
+	}
+	
+	public byte[] getPiTransferFile(String filename) throws FileNotFoundException {
+		return FileHelper.getFileContents(FileHelper.pathname(filename));
 	}
 	
 	public String getFilename(String pathname) throws FileNotFoundException {

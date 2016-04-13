@@ -14,8 +14,8 @@ import java.util.concurrent.TimeUnit;
 import connection.ConnectionHandler;
 import connection.Transmitter;
 import connection.Utilities;
-import piTransfer.FileController;
-import piTransfer.FileStore;
+import filemanaging.FileController;
+import filemanaging.FileStore;
 import ui.InteractionController;
 
 public class BerryPicker implements BerryHandler {
@@ -110,9 +110,46 @@ public class BerryPicker implements BerryHandler {
 		connectionHandler.transmitFile(file);
 	}
 	
-	public byte[] downloadFile(String filename) {
-		// TO DO
-		return "The amazing content of your file.".getBytes();
+	/**
+	 * Download the file if it is available from exactly one provider.
+	 * @return False if the file is not available on one of the remote
+	 * sources, or if it is ambiguous which file to download.
+	 */
+	public boolean download(String filename) {
+		if (!this.listRemoteFiles().contains(filename)) {
+			controller.displayError("This file is not available.");
+			return false;
+		} else {
+			int berryId = -1;;
+			for (Integer berry : availableFiles.keySet()) {
+				if (availableFiles.get(berry).contains(filename)) {
+					if (berryId == -1) {
+						berryId = berry;
+					} else {
+						controller.displayError("There are multiple berries that"
+								+ "have a file with this name.");
+						return false;
+					}
+				}
+			}
+			return this.download(filename, berryId);
+		}
+		
+	}
+	
+	/**
+	 * Download the file from the given device
+	 * @param filename
+	 * @param berryId
+	 * @return false if the file is not available on that device
+	 */
+	public boolean download(String filename, int berryId) {
+		if (availableFiles.get(berryId).contains(filename)) {
+			connectionHandler.requestFile(filename, this.getBerryById(berryId));
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 	public void saveFile(FileObject file) {
@@ -126,19 +163,15 @@ public class BerryPicker implements BerryHandler {
 	public boolean getFile(String filename, int berryId) {
 		if (this.listLocalFiles().contains(filename)) {
 			try {
-				this.uploadFile(store.getContent(filename), filename, berryId);
+				this.uploadFile(store.getPiTransferFile(filename), filename, berryId);
 				return true;				
 			} catch (FileNotFoundException e) {
+				System.out.println("File not found!");
 				return false;
 			}
 		} else {
 			return false;
 		}
-	}
-	
-	public boolean download(String filename) {
-		
-		return false;
 	}
 	
 	/**

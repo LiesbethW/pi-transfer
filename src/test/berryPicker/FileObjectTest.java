@@ -13,7 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import berryPicker.FileObject;
-import piTransfer.FileHelper;
+import filemanaging.FileHelper;
 
 public class FileObjectTest {
 	private String fullFileName = "/Users/liesbeth.wijers/Desktop/input.txt";

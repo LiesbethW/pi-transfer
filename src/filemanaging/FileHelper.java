@@ -1,4 +1,4 @@
-package piTransfer;
+package filemanaging;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -93,5 +93,9 @@ public class FileHelper {
 			fileNames.add(files[i].getName());
 		}
 		return fileNames;
+	}
+	
+	public static String pathname(String filename) {
+		return String.join(File.separator, FileHelper.FILE_DIR, filename);
 	}
 }

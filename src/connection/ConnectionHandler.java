@@ -46,13 +46,12 @@ public class ConnectionHandler implements Transmitter, LcpSender {
 	
 	public void transmitFile(FileObject file) {
 		LcpConnection lcpc = this.createNewLcpConnection(file);
-		System.out.println("File with name " + file.getName());
-		System.out.println("And content " + (new String(file.getContent())));
+		System.out.println("Starting transmission for file: " + file.getName());
 		lcpc.start();
 	}
 	
 	public void requestFile(String filename, InetAddress berry) {
-		general.sendFileRequest(filename, berry);
+		general.sendNewFileRequest(filename, berry);
 	}
 	
 	private void startHeartbeat() {
@@ -71,7 +70,7 @@ public class ConnectionHandler implements Transmitter, LcpSender {
 				Date timestamp = packet.getTimestamp();
 				ArrayList<String> files = packet.getFileList();
 				berryHandler.processHeartbeat(berryId, timestamp, files);
-			} else if (packet.getDestination().equals(bcastAddress)) {
+			} else if (!packet.fileTransferPacket() || packet.getDestination().equals(bcastAddress)) {
 				general.process(packet);
 			} else if (packet.getDestination().equals(myAddress)) {
 				short vcid = packet.getVCID();
@@ -138,7 +137,7 @@ public class ConnectionHandler implements Transmitter, LcpSender {
 	 * network.
 	 * @return
 	 */
-	private short generateVCID() {
+	short generateVCID() {
 		short vcid = 0;
 		while (vcid == 0) {
 			byte[] vCIDbytes = new byte[Short.BYTES];
@@ -150,6 +149,14 @@ public class ConnectionHandler implements Transmitter, LcpSender {
 			}
 		}
 		return vcid;
+	}
+	
+	/**
+	 * Package private method to use berryHandler
+	 * @return
+	 */
+	BerryHandler berryHandler() {
+		return this.berryHandler;
 	}
 	
 	/**

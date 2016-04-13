@@ -101,7 +101,7 @@ public class LcpPacket implements Protocol {
 	}
 	
 	public boolean fileTransferPacket() {
-		return getFlag() < FILE_REQUEST;
+		return getVCID() != 0;
 	}
 	
 	public boolean syn() {
@@ -239,8 +239,27 @@ public class LcpPacket implements Protocol {
 		header[SEQUENCE_NUMBER] = sequenceNumber;
 	}
 	
-	public void setFileRequest(String filename, int offset, boolean encryption) {
+	/**
+	 * File request for a new download
+	 * @param filename
+	 * @param encryption
+	 */
+	public void setFileRequest(String filename, boolean encryption) {
 		setFlag(FILE_REQUEST);
+		int offset = 0;
+		this.setMessage(this.serializeFileRequest(filename, offset, encryption));
+	}
+	
+	/**
+	 * File request to resume an existing download
+	 * @param vcid
+	 * @param filename
+	 * @param offset
+	 * @param encryption
+	 */
+	public void setFileRequest(short vcid, String filename, int offset, boolean encryption) {
+		setFlag(FILE_REQUEST);
+		setVCID(vcid);
 		this.setMessage(this.serializeFileRequest(filename, offset, encryption));
 	}
 	

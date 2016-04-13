@@ -5,7 +5,7 @@ import java.util.Date;
 
 public interface Transmitter extends Runnable {
 
-	// Interface towards FileController
+	// Interface towards FileStore
 	public void uploadFile(byte[] contents, String filename);
 	
 	public byte[] downloadFile(String filename);

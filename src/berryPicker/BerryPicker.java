@@ -1,11 +1,13 @@
 package berryPicker;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -17,8 +19,10 @@ public class BerryPicker implements Transmitter {
 	private FileStore store;
 	private ConnectionHandler connectionHandler;
 	private BlockingQueue<FileObject> receivedFiles = new LinkedBlockingQueue<FileObject>();
+	private ConcurrentHashMap<FileObject, Integer> filesToUpload = new ConcurrentHashMap<FileObject, Integer>();
+	private ConcurrentHashMap<String, Double> filesToDownload = new ConcurrentHashMap<String, Double>();
 	private HashMap<Integer, Date> berries = new HashMap<Integer, Date>();
-	private HashMap<Integer, ArrayList<String>> availableFiles = new HashMap<Integer, ArrayList<String>>();
+	private ConcurrentHashMap<Integer, ArrayList<String>> availableFiles = new ConcurrentHashMap<Integer, ArrayList<String>>();
 	
 	public BerryPicker(FileStore store) {
 		try {
@@ -59,11 +63,12 @@ public class BerryPicker implements Transmitter {
 	public void uploadFile(byte[] fileContents, String fileName, int berryId) {
 		FileObject file = new FileObject(fileContents, fileName);
 		file.setDestination(getBerryById(berryId));
+		this.filesToUpload.put(file, berryId);
 		connectionHandler.transmitFile(file);
 	}
 	
 	/**
-	 * Upload the file to the 
+	 * Upload the file to the berry that the last hearbeat was received of.
 	 */
 	public void uploadFile(byte[] fileContents, String fileName) {
 		this.uploadFile(fileContents, fileName, berryLastHeardOf());
@@ -78,10 +83,18 @@ public class BerryPicker implements Transmitter {
 		receivedFiles.add(file);
 	}
 	
+	/**
+	 * Respond to a file request coming in from the network by
+	 * starting to upload the file.
+	 */
 	public boolean getFile(String filename, int berryId) {
 		if (store.listRemoteFiles().contains(filename)) {
-			
-			return true;
+			try {
+				this.uploadFile(store.get(filename), filename, berryId);
+				return true;				
+			} catch (FileNotFoundException e) {
+				return false;
+			}
 		} else {
 			return false;
 		}

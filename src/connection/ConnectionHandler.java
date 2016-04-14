@@ -46,6 +46,7 @@ public class ConnectionHandler implements Transmitter, LcpSender {
 	
 	public void transmitFile(FileObject file) {
 		LcpConnection lcpc = this.createNewLcpConnection(file);
+//		berryHandler.addToUploadingList(file);
 		System.out.println("Starting transmission for file: " + file.getName());
 		lcpc.start();
 	}
@@ -100,11 +101,6 @@ public class ConnectionHandler implements Transmitter, LcpSender {
 			}
 		}
 		if (connectionToRemove != -1) { 
-			if (lcpConnections.get(connectionToRemove).downloadCompleted()) {
-				FileObject file = lcpConnections.get(connectionToRemove).getFile();
-				System.out.format("Download completed, saving file %s", file.getName());
-				berryHandler.saveFile(file);
-			}
 			System.out.format("Removing connection %d\n", connectionToRemove);
 			lcpConnections.remove(connectionToRemove);
 		}

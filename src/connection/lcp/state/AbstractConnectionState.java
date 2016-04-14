@@ -27,14 +27,6 @@ public abstract class AbstractConnectionState implements ConnectionState {
 		connection.getStrategy().startTransmission();
 	}
 	
-	public void handleAck(LcpPacket lcpp) {
-		connection.getStrategy().handleAck(lcpp);
-	}
-	
-	public void handleFilePart(LcpPacket lcpp) {
-		connection.getStrategy().handleFilePart(lcpp);
-	}
-	
 	public void completeAndSendPacket(LcpPacket lcpp) {
 		connection.completeAndSendPacket(lcpp);
 	}

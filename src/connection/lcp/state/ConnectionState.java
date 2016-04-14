@@ -1,6 +1,7 @@
 package connection.lcp.state;
 
 import berryPicker.FileObject;
+import connection.lcp.LcpConnection;
 import connection.lcp.LcpPacket;
 
 public interface ConnectionState {
@@ -11,10 +12,6 @@ public interface ConnectionState {
 	
 	public abstract void startTransmission();
 	
-	public abstract void handleAck(LcpPacket lcpp);
-	
-	public abstract void handleFilePart(LcpPacket lcpp);
-	
 	public abstract boolean maxTimeoutsReached();
 	
 	public abstract boolean transmissionCompleted();
@@ -23,4 +20,5 @@ public interface ConnectionState {
 	
 	public abstract FileObject getFile();
 	
+	public LcpConnection getConnection();
 }

@@ -6,14 +6,11 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import connection.ConnectionHandler;
 import connection.Transmitter;
-import connection.Utilities;
 import filemanaging.FileController;
 import filemanaging.FileStore;
 import ui.InteractionController;
@@ -22,9 +19,8 @@ public class BerryPicker implements BerryHandler {
 	private InteractionController controller;
 	private FileStore store;
 	private Transmitter connectionHandler;
-	private BlockingQueue<FileObject> receivedFiles = new LinkedBlockingQueue<FileObject>();
 	private ConcurrentHashMap<FileObject, Integer> filesToUpload = new ConcurrentHashMap<FileObject, Integer>();
-	private ConcurrentHashMap<String, Double> filesToDownload = new ConcurrentHashMap<String, Double>();
+	private CopyOnWriteArrayList<FileObject> filesToDownload = new CopyOnWriteArrayList<FileObject>();
 	private HashMap<Integer, Date> berries = new HashMap<Integer, Date>();
 	private ConcurrentHashMap<Integer, ArrayList<String>> availableFiles = new ConcurrentHashMap<Integer, ArrayList<String>>();
 	
@@ -47,6 +43,13 @@ public class BerryPicker implements BerryHandler {
 	public void run() {
 		while(true) {
 			checkForFilesToSave();
+//			showDownloadProgression();
+//			clearFilesToUpload();
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -55,19 +58,26 @@ public class BerryPicker implements BerryHandler {
 	 * those from the list of files to download if they were there.
 	 */
 	public void checkForFilesToSave() {
-		FileObject receivedFile;
-		try {
-			receivedFile = receivedFiles.poll(1, TimeUnit.SECONDS);
-			if (receivedFile != null) {
-				store.save(receivedFile.getContent(), receivedFile.getName());
-				availableFiles.put(Utilities.getMyId(), store.listLocalFiles());
-				if (filesToDownload.containsKey(receivedFile.getName())) {
-					filesToDownload.remove(receivedFile.getName());
-				}
-			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}		
+		for (FileObject file : filesToDownload) {
+//			if ()
+			
+			System.out.format("Download completed, saving file %s", file.getName());
+		}
+		
+		
+//		FileObject receivedFile;
+//		try {
+//			receivedFile = receivedFiles.poll(1, TimeUnit.SECONDS);
+//			if (receivedFile != null) {
+//				store.save(receivedFile.getContent(), receivedFile.getName());
+//				availableFiles.put(Utilities.getMyId(), store.listLocalFiles());
+//				if (filesToDownload.containsKey(receivedFile.getName())) {
+//					filesToDownload.remove(receivedFile.getName());
+//				}
+//			}
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}		
 	}
 	
 	public boolean upload(String pathname) {
@@ -152,8 +162,13 @@ public class BerryPicker implements BerryHandler {
 		}
 	}
 	
-	public void saveFile(FileObject file) {
-		receivedFiles.add(file);
+	public void addToDownloadingList(FileObject file) {
+		filesToDownload.add(file);
+	}
+	
+	@Override
+	public void addToUploadingList(FileObject file, Integer berry) {
+		filesToUpload.put(file, berry);
 	}
 	
 	/**

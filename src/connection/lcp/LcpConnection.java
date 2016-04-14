@@ -49,6 +49,7 @@ public class LcpConnection implements Runnable {
 			this.setSender(address);
 		}
 		this.virtualCircuitID = virtualCircuitID;
+		this.resetTimeOuts();
 		this.strategy = new SlidingWindowStrategy(this);
 		initializeStates();
 		setState(Initialized.class);

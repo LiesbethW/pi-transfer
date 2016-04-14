@@ -25,7 +25,7 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 		windowSize = DEFAULT_WINDOW_SIZE;
 		lastReceivedAck = 0;
 		seqNumToAck = 0;
-		estimatedRTT = 1000;
+		estimatedRTT = 10000;
 		sendingTimes = new ConcurrentHashMap<Byte, Long>();
 		initializeSlidingWindow();
 	}
@@ -33,7 +33,7 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 	@Override
 	public void startTransmission() {
 		sendNextPart();
-		Timer timer = new Timer();
+		timer = new Timer();
 		timer.schedule(new SendNextPart(this), (long) 2*estimatedRTT);
 	}
 
@@ -44,6 +44,9 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 		if (sequenceNumberToFilePart.containsKey((Byte) sequenceNumber)) {
 			this.savePart(packet.getData(), sequenceNumberToFilePart.get((Byte) sequenceNumber).intValue());
 			acks.put(sequenceNumber, true);
+			if (sequenceNumberToFilePart.get(sequenceNumber).equals(this.connection().getFile().lastPart())) {
+				System.out.println("The download has completed.");
+			}
 			updateReceivingWindow();
 		}
 		this.sendAck((byte) (seqNumToAck - 1));
@@ -51,28 +54,37 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 
 	@Override
 	public void handleAck(LcpPacket packet) {
-		timer.cancel();
+		// Only cancel and schedule a new timer if another sequence
+		// number has arrived than the seqNumToAck - 1.
+		if (! ((packet.getSequenceNumber()^(seqNumToAck-1)) == 0)) {
+			timer.cancel();
+			timer = new Timer();
+			timer.schedule(new SendNextPart(this), (long) 2*estimatedRTT); 	
+		} else {
+			System.out.println("That is the same ack again: let that timer run off!");
+		}
+
 		connection().resetTimeOuts();
 		
 		updateEstimatedRTT(packet.getSequenceNumber(), new Date());
 		byte sequenceNumber = packet.getSequenceNumber();
 		System.out.format("Received ack %d\n", sequenceNumber);
-		for (byte b = (byte) (seqNumToAck - 1); (b^(sequenceNumber + 1)) != 0; b++) {
+		byte b = seqNumToAck;
+		while (b != (byte) (sequenceNumber + 1)) {
 			if (acks.containsKey(b)) {
 				acks.put(b, true);
 				System.out.format("Set %d true\n", b);
 			}
+			b++;
 		}
-		System.out.println("After updating acks: " + this.acks().entrySet());
 		if (sequenceNumberToFilePart.containsKey(sequenceNumber) && 
 				sequenceNumberToFilePart.get(sequenceNumber) >= connection().getFile().lastPart()) {
 			this.connection().setTransmissionCompleted();
+			System.out.println("The upload has completed.");
 		}
 		updateTransmittingWindow();
 		
-		sendNextPart();
-		timer = new Timer();
-		timer.schedule(new SendNextPart(this), (long) 2*estimatedRTT); 		
+		sendNextPart();	
 	}
 	
 	private void sendNextPart() {
@@ -80,22 +92,28 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 			if (!acks.get(sn)) {
 				if (!sendingTimes.containsKey(sn)) {
 					this.sendPart(sn, sequenceNumberToFilePart.get(sn));
-					break;
 				} else if (now() - sendingTimes.get(sn) > 2*estimatedRTT) {
-					doubleEstimatedRTT();
 					this.sendPart(sn, sequenceNumberToFilePart.get(sn));
-					break;
 				}
 			}
 		}
-//		timer = new Timer();
-//		timer.schedule(new SendNextPart(this), (long) estimatedRTT/windowSize); 
+	}
+	
+	private void sendAllFramesAgain() {
+		for (Byte sn : sequenceNumberToFilePart.keySet()) {
+			if (!acks.get(sn)) {
+				this.sendPart(sn, sequenceNumberToFilePart.get(sn));
+			}
+		}
+		timer = new Timer();
+		timer.schedule(new SendNextPart(this), (long) 2*estimatedRTT);
 	}
 	
 	@Override
 	public void sendPart(byte sequenceNumber, int partNumber) {
 		super.sendPart(sequenceNumber, partNumber);
 		sendingTimes.put(sequenceNumber, now());
+		System.out.format("Sending part %d\n", partNumber);
 	}
 
 	public void updateTransmittingWindow() {
@@ -112,9 +130,6 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 			seqNumToAck++;
 			acked = acks.get(seqNumToAck);
 		}
-		System.out.println("Sequence Number to file part: " + this.slidingWindow().entrySet());
-		System.out.println("Acks: " + this.acks().entrySet());
-		System.out.println("Now the next sequence number that I expect an ack from is " + seqNumToAck);
 	}
 	
 	public void updateReceivingWindow() {
@@ -131,21 +146,17 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 			seqNumToAck++;
 			acked = acks.get(seqNumToAck);
 		}
-		System.out.println("Sequence Number to file part: " + this.slidingWindow().entrySet());
-		System.out.println("Acks: " + this.acks().entrySet());
-		System.out.println("Now the next sequence number that I expect a packet from is " + seqNumToAck);
 	}
 	
 	public void doubleEstimatedRTT() {
-		estimatedRTT = 2*estimatedRTT;
+		estimatedRTT = (long) 1.5*estimatedRTT;
+		System.out.format("Doubled estimated RTT to %d\n", estimatedRTT);
 	}
 	
 	public void updateEstimatedRTT(byte sequenceNumber, Date date) {
-		if (sendingTimes.contains(sequenceNumber)) {
-			long measuredRTT = date.getTime() - sendingTimes.get(sequenceNumber);
-			estimatedRTT = (long) (0.6*measuredRTT + 0.4*estimatedRTT);
-			System.out.format("Updated estimated RTT to %d\n", estimatedRTT);
-		}
+		long measuredRTT = date.getTime() - sendingTimes.get(sequenceNumber);
+		estimatedRTT = (long) (0.6*measuredRTT + 0.4*estimatedRTT);
+		System.out.format("Updated estimated RTT to %d\n", estimatedRTT);
 	}
 	
 	private void initializeSlidingWindow() {
@@ -159,10 +170,6 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 	
 	private long now() {
 		return (new Date()).getTime();
-	}
-	
-	private byte nextSequenceNumber(byte sequenceNumber) {
-		return (byte) ((sequenceNumber + 1) % 100);
 	}
 	
 	/**
@@ -180,13 +187,14 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 		private SlidingWindowStrategy strategy;
 		
 		public SendNextPart(SlidingWindowStrategy strategy) {
-			System.out.println("had a timeout");
-			this.strategy.connection().timeOut();
 			this.strategy = strategy;
 		}
 		
 		public void run() {
-			strategy.sendNextPart();
+			strategy.sendAllFramesAgain();
+			System.out.println("had a timeout");
+			this.strategy.doubleEstimatedRTT();
+			this.strategy.connection().timeOut();
 		}
 	}
 }

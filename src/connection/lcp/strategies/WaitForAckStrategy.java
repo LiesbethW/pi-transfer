@@ -56,10 +56,4 @@ public class WaitForAckStrategy extends TransmissionStrategy {
 		}
 	}
 
-	@Override
-	protected void updateWindow(byte ack) {
-		// TODO Auto-generated method stub
-		
-	}
-
 }

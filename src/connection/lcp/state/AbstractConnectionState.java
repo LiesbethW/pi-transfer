@@ -11,7 +11,6 @@ public abstract class AbstractConnectionState implements ConnectionState {
 	protected LcpConnection connection;
 	protected HashMap<Integer, Command> transitionMap = new HashMap<Integer, Command>();
 	protected int maxTimeOuts = 2;
-	protected int timeOuts = 0;
 	
 	public AbstractConnectionState(LcpConnection connection) {
 		this.connection = connection;
@@ -21,7 +20,6 @@ public abstract class AbstractConnectionState implements ConnectionState {
 	public Class<? extends AbstractConnectionState> digest(LcpPacket lcpp) {
 		// Because a package has been received, the number of timeouts can
 		// be reset to 0.
-		timeOuts = 0;
 		return transition(lcpp);
 	}
 	
@@ -51,7 +49,7 @@ public abstract class AbstractConnectionState implements ConnectionState {
 	}
 	
 	public boolean maxTimeoutsReached() {
-		return timeOuts >= maxTimeOuts;
+		return connection.timeOuts() >= maxTimeOuts;
 	}
 	
 	public LcpConnection getConnection() {

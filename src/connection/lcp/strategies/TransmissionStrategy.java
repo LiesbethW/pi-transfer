@@ -22,13 +22,13 @@ public abstract class TransmissionStrategy {
 		this.connection().completeAndSendPacket(ack);
 	}
 	
-	protected abstract void updateWindow(byte ack);
-	
 	protected void sendPart(byte sequenceNumber, int partNumber) {
-		byte[] content = connection.getFile().getPart(partNumber);
-		LcpPacket filePart = new LcpPacket();
-		filePart.setFilePart(content, sequenceNumber);
-		this.connection().completeAndSendPacket(filePart);
+		if (connection.getFile().numberOfParts() > partNumber) {
+			byte[] content = connection.getFile().getPart(partNumber);
+			LcpPacket filePart = new LcpPacket();
+			filePart.setFilePart(content, sequenceNumber);
+			this.connection().completeAndSendPacket(filePart);
+		}
 	}
 	
 	protected void savePart(byte[] data, int partNumber) {

@@ -316,9 +316,6 @@ public class LcpPacket implements Protocol {
 		// Set the checksum
 		setChecksum();
 		
-		System.out.println(":: Created packet to send ::");
-		this.print();
-		
 		packet = new DatagramPacket(buffer, buffer.length);
 		packet.setAddress(address);
 		packet.setPort(destinationPort);
@@ -339,7 +336,6 @@ public class LcpPacket implements Protocol {
 		cleanChecksumValue();
 		checksumCalculator.reset();
 		checksumCalculator.update(buffer);
-		long checksum = checksumCalculator.getValue();
 		return sentChecksum == checksumCalculator.getValue();
 	}
 	
@@ -374,7 +370,7 @@ public class LcpPacket implements Protocol {
 		String totalLength = String.join(DELIMITER2, TOTAL_LENGTH, String.valueOf(file.getLength()));
 		String fileChecksum = String.join(DELIMITER2, FILE_CHECKSUM, String.valueOf(file.getFileChecksum()));
 		String bytesPerPartString = String.join(DELIMITER2, BYTES_PER_PART, String.valueOf(file.getBytesPerPart()));
-		return String.join(DELIMITER, fileName, totalLength, fileChecksum);		
+		return String.join(DELIMITER, fileName, totalLength, fileChecksum, bytesPerPartString);		
 	}
 	
 	private String serializeFileRequest(String filename, int offset, boolean encryption) {

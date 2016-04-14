@@ -16,8 +16,8 @@ import connection.lcp.state.FinSent;
 import connection.lcp.state.Initialized;
 import connection.lcp.state.SynReceived;
 import connection.lcp.state.SynSent;
+import connection.lcp.strategies.SlidingWindowStrategy;
 import connection.lcp.strategies.TransmissionStrategy;
-import connection.lcp.strategies.WaitForAckStrategy;
 
 public class LcpConnection implements Runnable {
 	private static ArrayList<Class<? extends AbstractConnectionState> > stateList =
@@ -27,12 +27,13 @@ public class LcpConnection implements Runnable {
 	// LCP Connection attributes
 	private LcpSender handler;
 	private ConnectionState state;
-	private TransmissionStrategy strategy;
+	protected TransmissionStrategy strategy;
 	private InetAddress myIP;
 	private InetAddress otherIP;
 	private FileObject file;
 	private short virtualCircuitID;
 	protected boolean transmissionCompleted;
+	protected int timeOuts;
 	
 	// States
 	private HashMap<Class<? extends AbstractConnectionState>, AbstractConnectionState> states;
@@ -48,7 +49,8 @@ public class LcpConnection implements Runnable {
 			this.setSender(address);
 		}
 		this.virtualCircuitID = virtualCircuitID;
-		this.strategy = new WaitForAckStrategy(this);
+		this.resetTimeOuts();
+		this.strategy = new SlidingWindowStrategy(this);
 		initializeStates();
 		setState(Initialized.class);
 	}
@@ -106,6 +108,22 @@ public class LcpConnection implements Runnable {
 	
 	public void setTransmissionCompleted() {
 		transmissionCompleted = true;
+	}
+	
+	public int timeOuts() {
+		return timeOuts;
+	}
+	
+	public void timeOut() {
+		timeOuts++;
+	}
+	
+	public void resetTimeOuts() {
+		timeOuts = 0;
+	}
+	
+	public boolean maxTimeOutsReached() {
+		return state.maxTimeoutsReached();
 	}
 	
 	public FileObject getFile() {

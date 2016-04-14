@@ -6,14 +6,11 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import connection.ConnectionHandler;
 import connection.Transmitter;
-import connection.Utilities;
 import filemanaging.FileController;
 import filemanaging.FileStore;
 import ui.InteractionController;
@@ -22,9 +19,8 @@ public class BerryPicker implements BerryHandler {
 	private InteractionController controller;
 	private FileStore store;
 	private Transmitter connectionHandler;
-	private BlockingQueue<FileObject> receivedFiles = new LinkedBlockingQueue<FileObject>();
-	private ConcurrentHashMap<FileObject, Integer> filesToUpload = new ConcurrentHashMap<FileObject, Integer>();
-	private ConcurrentHashMap<String, Double> filesToDownload = new ConcurrentHashMap<String, Double>();
+	private ConcurrentHashMap<FileStats, Integer> filesToUpload = new ConcurrentHashMap<FileStats, Integer>();
+	private CopyOnWriteArrayList<FileStats> filesToDownload = new CopyOnWriteArrayList<FileStats>();
 	private HashMap<Integer, Date> berries = new HashMap<Integer, Date>();
 	private ConcurrentHashMap<Integer, ArrayList<String>> availableFiles = new ConcurrentHashMap<Integer, ArrayList<String>>();
 	
@@ -47,29 +43,83 @@ public class BerryPicker implements BerryHandler {
 	public void run() {
 		while(true) {
 			checkForFilesToSave();
+			checkForCompletedUploads();
+			showProgression();
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
 	/**
 	 * Check if there are complete received files to save. Remove
-	 * those from the list of files to download if they were there.
+	 * those from the list of files to download.
 	 */
 	public void checkForFilesToSave() {
-		FileObject receivedFile;
-		try {
-			receivedFile = receivedFiles.poll(1, TimeUnit.SECONDS);
-			if (receivedFile != null) {
-				store.save(receivedFile.getContent(), receivedFile.getName());
-				availableFiles.put(Utilities.getMyId(), store.listLocalFiles());
-				if (filesToDownload.containsKey(receivedFile.getName())) {
-					filesToDownload.remove(receivedFile.getName());
-				}
+		FileStats readyStats = null;
+		for (FileStats stats : filesToDownload) {
+			if (stats.ready()) {
+				FileObject file = stats.file();
+				store.save(file.getContent(), file.getName());
+				System.out.format("Download completed, saving file %s", file.getName());
+				readyStats = stats;
+				break;
 			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}		
+		}
+		if (readyStats != null) {
+			filesToDownload.remove(readyStats);
+		}
 	}
 	
+	/**
+	 * Check if there are completely uploaded files. Remove
+	 * those from the list of files to upload.
+	 */
+	public void checkForCompletedUploads() {
+		FileStats readyStats = null;
+		for (FileStats stats : filesToUpload.keySet()) {
+			if (stats.ready()) {
+				FileObject file = stats.file();
+				System.out.format("Upload of %s to %d completed", file.getName(), filesToUpload.get(stats));
+				readyStats = stats;
+				break;
+			}
+		}
+		if (readyStats != null) {
+			filesToUpload.remove(readyStats);
+		}
+	}
+	
+	public void showProgression() {
+		for (FileStats stats : filesToUpload.keySet()) {
+			controller.showStats(stats.filename(), stats.fraction(), stats.speed());
+		}
+		for (FileStats stats : filesToDownload) {
+			controller.showStats(stats.filename(), stats.fraction(), stats.speed());
+		}
+	}
+	
+	public void removeConnection(FileStats stats) {
+		if (filesToDownload.contains(stats)) {
+			if (stats.ready()) {
+				FileObject file = stats.file();
+				System.out.format("Download of %s is completed", file.getName());
+				filesToDownload.remove(stats);
+			} else {
+				System.out.format("The download of %s was not finished", stats.filename());
+			}
+			
+		} else if (filesToUpload.containsKey(stats)) {
+			FileObject file = stats.file();
+			System.out.format("Upload of %s to %d completed", file.getName(), filesToUpload.get(stats));
+			filesToUpload.remove(stats);
+		} else {
+			System.err.println("The removing of stats in this way is not working.");
+		}
+	}
+		
 	public boolean upload(String pathname) {
 		if (berries.size() < 1) {
 			controller.displayError("There are no Raspberry Pies available to upload this file to.");
@@ -106,7 +156,6 @@ public class BerryPicker implements BerryHandler {
 	private void uploadFile(byte[] fileContents, String fileName, int berryId) {
 		FileObject file = new FileObject(fileContents, fileName);
 		file.setDestination(getBerryById(berryId));
-		this.filesToUpload.put(file, berryId);
 		connectionHandler.transmitFile(file);
 	}
 	
@@ -152,8 +201,15 @@ public class BerryPicker implements BerryHandler {
 		}
 	}
 	
-	public void saveFile(FileObject file) {
-		receivedFiles.add(file);
+	public void addToDownloadingList(FileStats stats) {
+		filesToDownload.add(stats);
+		System.out.format("Added %s to files to Download\n", stats.filename());
+	}
+	
+	@Override
+	public void addToUploadingList(FileStats stats, Integer berry) {
+		filesToUpload.put(stats, berry);
+		System.out.format("Added %s to files to Upload\n", stats.filename());
 	}
 	
 	/**

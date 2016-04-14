@@ -15,7 +15,6 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 	private ConcurrentHashMap<Byte, Integer> sequenceNumberToFilePart;
 	private ConcurrentHashMap<Byte, Boolean> acks;
 	private int windowSize;
-	private byte lastReceivedAck;
 	private byte seqNumToAck;
 	private long estimatedRTT;
 	private ConcurrentHashMap<Byte, Long> sendingTimes;
@@ -23,7 +22,6 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 	public SlidingWindowStrategy(LcpConnection connection) {
 		super(connection);
 		windowSize = DEFAULT_WINDOW_SIZE;
-		lastReceivedAck = 0;
 		seqNumToAck = 0;
 		estimatedRTT = 10000;
 		sendingTimes = new ConcurrentHashMap<Byte, Long>();
@@ -40,7 +38,6 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 	@Override
 	public void handleFilePart(LcpPacket packet) {
 		byte sequenceNumber = packet.getSequenceNumber();
-		System.out.format("Received packet %d\n", sequenceNumber);
 		if (sequenceNumberToFilePart.containsKey((Byte) sequenceNumber)) {
 			this.savePart(packet.getData(), sequenceNumberToFilePart.get((Byte) sequenceNumber).intValue());
 			acks.put(sequenceNumber, true);
@@ -60,27 +57,23 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 			timer.cancel();
 			timer = new Timer();
 			timer.schedule(new SendNextPart(this), (long) 2*estimatedRTT); 	
-		} else {
-			System.out.println("That is the same ack again: let that timer run off!");
-		}
+		} 
 
 		connection().resetTimeOuts();
 		
 		updateEstimatedRTT(packet.getSequenceNumber(), new Date());
 		byte sequenceNumber = packet.getSequenceNumber();
-		System.out.format("Received ack %d\n", sequenceNumber);
 		byte b = seqNumToAck;
 		while (b != (byte) (sequenceNumber + 1)) {
 			if (acks.containsKey(b)) {
 				acks.put(b, true);
-				System.out.format("Set %d true\n", b);
 			}
 			b++;
 		}
-		if (sequenceNumberToFilePart.containsKey(sequenceNumber) && 
-				sequenceNumberToFilePart.get(sequenceNumber) >= connection().getFile().lastPart()) {
+		if (sequenceNumberToFilePart.containsKey(seqNumToAck) && 
+				sequenceNumberToFilePart.get(seqNumToAck) >= connection().getFile().lastPart()) {
 			this.connection().setTransmissionCompleted();
-			System.out.println("The upload has completed.");
+			timer.cancel();
 		}
 		updateTransmittingWindow();
 		
@@ -100,25 +93,34 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 	}
 	
 	private void sendAllFramesAgain() {
-		for (Byte sn : sequenceNumberToFilePart.keySet()) {
-			if (!acks.get(sn)) {
-				this.sendPart(sn, sequenceNumberToFilePart.get(sn));
+		if (!this.connection().transmissionCompleted()) {
+			for (Byte sn : sequenceNumberToFilePart.keySet()) {
+				if (acks.containsKey(sn) && !acks.get(sn)) {
+					this.sendPart(sn, sequenceNumberToFilePart.get(sn));
+				}
 			}
+			timer = new Timer();
+			timer.schedule(new SendNextPart(this), (long) 2*estimatedRTT);			
 		}
-		timer = new Timer();
-		timer.schedule(new SendNextPart(this), (long) 2*estimatedRTT);
 	}
 	
 	@Override
 	public void sendPart(byte sequenceNumber, int partNumber) {
 		super.sendPart(sequenceNumber, partNumber);
 		sendingTimes.put(sequenceNumber, now());
-		System.out.format("Sending part %d\n", partNumber);
 	}
 
 	public void updateTransmittingWindow() {
 		boolean acked = acks.get(seqNumToAck);
 		while (acked) {
+			this.connection().updateStats(sequenceNumberToFilePart.get(seqNumToAck));
+			
+			if (sequenceNumberToFilePart.get(seqNumToAck) >= connection().getFile().lastPart()) {
+				this.connection().setTransmissionCompleted();
+				System.out.println("The upload has completed.");
+				timer.cancel();
+			}
+			
 			byte largestFrameToSend = (byte) (seqNumToAck + windowSize);
 			int largestPartToSend = sequenceNumberToFilePart.get(seqNumToAck) + windowSize;
 			sequenceNumberToFilePart.put(largestFrameToSend, largestPartToSend);
@@ -135,6 +137,8 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 	public void updateReceivingWindow() {
 		boolean acked = acks.get(seqNumToAck);
 		while (acked) {
+			this.connection().updateStats(sequenceNumberToFilePart.get(seqNumToAck));
+			
 			byte largestFrameToSend = (byte) (seqNumToAck + windowSize);
 			int largestPartToSend = sequenceNumberToFilePart.get(seqNumToAck) + windowSize;
 			sequenceNumberToFilePart.put(largestFrameToSend, largestPartToSend);
@@ -149,14 +153,14 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 	}
 	
 	public void doubleEstimatedRTT() {
-		estimatedRTT = (long) 1.5*estimatedRTT;
-		System.out.format("Doubled estimated RTT to %d\n", estimatedRTT);
+		estimatedRTT = (long) 2*estimatedRTT;
 	}
 	
 	public void updateEstimatedRTT(byte sequenceNumber, Date date) {
-		long measuredRTT = date.getTime() - sendingTimes.get(sequenceNumber);
-		estimatedRTT = (long) (0.6*measuredRTT + 0.4*estimatedRTT);
-		System.out.format("Updated estimated RTT to %d\n", estimatedRTT);
+		if (sendingTimes.containsKey(sequenceNumber)) {
+			long measuredRTT = date.getTime() - sendingTimes.get(sequenceNumber);
+			estimatedRTT = (long) (0.6*measuredRTT + 0.4*estimatedRTT);
+		}
 	}
 	
 	private void initializeSlidingWindow() {
@@ -192,7 +196,6 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 		
 		public void run() {
 			strategy.sendAllFramesAgain();
-			System.out.println("had a timeout");
 			this.strategy.doubleEstimatedRTT();
 			this.strategy.connection().timeOut();
 		}

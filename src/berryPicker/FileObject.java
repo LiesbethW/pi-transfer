@@ -103,12 +103,12 @@ public class FileObject {
 		this.content = new byte[length];
 	}
 	
-	public boolean setPart(byte[] data, int sequenceNumber) {
-		return setPart(data, sequenceNumber, getBytesPerPart());
+	public boolean setPart(byte[] data, int partNumber) {
+		return setPart(data, partNumber, getBytesPerPart());
 	}
 	
-	public boolean setPart(byte[] data, int sequenceNumber, int bytesPerPart) {
-		int offset = sequenceNumber*bytesPerPart;
+	public boolean setPart(byte[] data, int partNumber, int bytesPerPart) {
+		int offset = partNumber*bytesPerPart;
 		int ending = offset + data.length;
 		if (content == null || ending > getLength()) {
 			System.out.println("Cannot write data into file content: it's too big!");

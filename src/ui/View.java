@@ -8,6 +8,8 @@ public interface View {
 	
 	public void showError(String errorMessage);
 	
+	public void showStats(String filename, double fraction, int bytesPerSecond);
+	
 	public void list(ArrayList<String> list);
 	
 }

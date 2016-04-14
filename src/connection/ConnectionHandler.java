@@ -46,6 +46,7 @@ public class ConnectionHandler implements Transmitter, LcpSender {
 	
 	public void transmitFile(FileObject file) {
 		LcpConnection lcpc = this.createNewLcpConnection(file);
+		berryHandler.addToUploadingList(lcpc.getStats(), lcpc.getDestinationId());
 		System.out.println("Starting transmission for file: " + file.getName());
 		lcpc.start();
 	}
@@ -72,12 +73,11 @@ public class ConnectionHandler implements Transmitter, LcpSender {
 			} else if (packet.getDestination().equals(myAddress)) {
 				short vcid = packet.getVCID();
 				if (lcpConnections.containsKey(vcid)) {
-					System.out.format("Process with id %d and in state %s received packet\n",
-							vcid, lcpConnections.get(vcid).getState().toString());
 					lcpConnections.get(vcid).digest(packet);
 				} else {
 					System.out.println("VCID " + vcid + " is not yet known, I'm starting a new connection.");
 					LcpConnection connection = this.createNewLcpConnection(vcid, packet.getSource());
+					berryHandler.addToDownloadingList(connection.getStats());
 					connection.digest(packet);
 				}
 			} else {
@@ -100,12 +100,8 @@ public class ConnectionHandler implements Transmitter, LcpSender {
 			}
 		}
 		if (connectionToRemove != -1) { 
-			if (lcpConnections.get(connectionToRemove).downloadCompleted()) {
-				FileObject file = lcpConnections.get(connectionToRemove).getFile();
-				System.out.format("Download completed, saving file %s", file.getName());
-				berryHandler.saveFile(file);
-			}
 			System.out.format("Removing connection %d\n", connectionToRemove);
+			berryHandler.removeConnection(lcpConnections.get(connectionToRemove).getStats());
 			lcpConnections.remove(connectionToRemove);
 		}
 	}

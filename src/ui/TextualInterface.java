@@ -18,6 +18,10 @@ public class TextualInterface implements View {
 		show(String.format("Someting went wrong: %s", errorMessage));
 	}
 	
+	public void showStats(String filename, double fraction, int bytesPerSecond) {
+		show(String.format("%s: %.1f%c, %d bytes/s", filename, fraction*100, '%', bytesPerSecond));
+	}
+	
 	public void list(ArrayList<String> list) {
 		String[] myArray = new String[0];
 		show(String.join("\n", list.toArray(myArray)));

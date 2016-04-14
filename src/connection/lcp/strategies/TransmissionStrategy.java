@@ -32,7 +32,6 @@ public abstract class TransmissionStrategy {
 	}
 	
 	protected void savePart(byte[] data, int partNumber) {
-		System.out.format("Saving part %d (with length %d)\n", partNumber, data.length);
 		connection.getFile().setPart(data, partNumber);
 	}
 	

@@ -27,14 +27,6 @@ public abstract class AbstractConnectionState implements ConnectionState {
 		connection.getStrategy().startTransmission();
 	}
 	
-	public void handleAck(LcpPacket lcpp) {
-		connection.getStrategy().handleAck(lcpp);
-	}
-	
-	public void handleFilePart(LcpPacket lcpp) {
-		connection.getStrategy().handleFilePart(lcpp);
-	}
-	
 	public void completeAndSendPacket(LcpPacket lcpp) {
 		connection.completeAndSendPacket(lcpp);
 	}
@@ -43,7 +35,8 @@ public abstract class AbstractConnectionState implements ConnectionState {
 		if (transitionMap.containsKey(lcpp.getFlag())) {
 			return transitionMap.get(lcpp.getFlag()).runCommand(lcpp, this);
 		} else {
-			System.err.println("This state transition is not permitted.");
+			System.err.format("This state transition is not permitted: received %d in state %s", lcpp.getFlag(),
+					this.getClass().toString());
 			return this.getClass();
 		}
 	}

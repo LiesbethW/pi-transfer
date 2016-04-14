@@ -10,7 +10,7 @@ public class ProcessFilePart implements Command {
 	@Override
 	public Class<? extends AbstractConnectionState> runCommand(LcpPacket lcpp, ConnectionState state) {
 		
-		state.handleFilePart(lcpp);
+		state.getConnection().handleFilePart(lcpp);
 		
 		return Established.class;
 	}

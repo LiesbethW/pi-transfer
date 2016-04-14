@@ -38,7 +38,11 @@ public interface BerryHandler extends Runnable {
 
 	// Interface towards ConnectionHandler
 	
-	public void saveFile(FileObject file);
+	public void addToDownloadingList(FileStats stats);
+	
+	public void addToUploadingList(FileStats stats, Integer berry);
+	
+	public void removeConnection(FileStats stats);
 	
 	public boolean getFile(String filename, int destinationId);
 

@@ -82,7 +82,7 @@ public class BerryPicker implements BerryHandler {
 		for (FileStats stats : filesToUpload.keySet()) {
 			if (stats.ready()) {
 				FileObject file = stats.file();
-				System.out.format("Upload of %s to %i completed", file.getName(), filesToUpload.get(stats));
+				System.out.format("Upload of %s to %d completed", file.getName(), filesToUpload.get(stats));
 				readyStats = stats;
 				break;
 			}

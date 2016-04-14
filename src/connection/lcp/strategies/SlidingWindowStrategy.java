@@ -93,13 +93,15 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 	}
 	
 	private void sendAllFramesAgain() {
-		for (Byte sn : sequenceNumberToFilePart.keySet()) {
-			if (!acks.containsKey(sn) || !acks.get(sn)) {
-				this.sendPart(sn, sequenceNumberToFilePart.get(sn));
+		if (!this.connection().transmissionCompleted()) {
+			for (Byte sn : sequenceNumberToFilePart.keySet()) {
+				if (acks.containsKey(sn) && !acks.get(sn)) {
+					this.sendPart(sn, sequenceNumberToFilePart.get(sn));
+				}
 			}
+			timer = new Timer();
+			timer.schedule(new SendNextPart(this), (long) 2*estimatedRTT);			
 		}
-		timer = new Timer();
-		timer.schedule(new SendNextPart(this), (long) 2*estimatedRTT);
 	}
 	
 	@Override

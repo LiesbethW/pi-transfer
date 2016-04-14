@@ -19,7 +19,7 @@ public class TextualInterface implements View {
 	}
 	
 	public void showStats(String filename, double fraction, int bytesPerSecond) {
-		show(String.format("%s: %.1f %, %d bytes/s", filename, fraction*100, bytesPerSecond));
+		show(String.format("%s: %.1f%c, %d bytes/s", filename, fraction*100, '%', bytesPerSecond));
 	}
 	
 	public void list(ArrayList<String> list) {

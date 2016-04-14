@@ -14,6 +14,7 @@ public class SendSynAck implements Command {
 		state.getFile().setEmptyContent(lcpp.getTotalLength());
 		state.getFile().setFileChecksum(lcpp.getFileChecksum());
 		state.getFile().setBytesPerPart(lcpp.getBytesPerPart());
+		state.getConnection().resetStats();
 		
 		// Create and send synack message
 		LcpPacket synAckPacket = new LcpPacket();

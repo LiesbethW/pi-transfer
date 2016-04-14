@@ -126,7 +126,7 @@ public class LcpConnection extends Observable implements Runnable {
 	}
 	
 	public boolean transmissionCompleted() {
-		return transmissionCompleted;
+		return transmissionCompleted || getStats().ready();
 	}
 	
 	public void setTransmissionCompleted() {
@@ -157,6 +157,10 @@ public class LcpConnection extends Observable implements Runnable {
 		return otherIP;
 	}
 	
+	public int getDestinationId() {
+		return otherIP.getAddress()[3];
+	}
+	
 	public InetAddress getSender() {
 		return otherIP;
 	}
@@ -172,6 +176,10 @@ public class LcpConnection extends Observable implements Runnable {
 	public void setFile(FileObject file) {
 		this.file = file;
 		setSender(file.getDestination());
+		resetStats();
+	}
+	
+	public void resetStats() {
 		this.getStats().initializeStats();
 	}
 	

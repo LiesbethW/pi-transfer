@@ -61,6 +61,10 @@ public class InteractionController implements Runnable {
 		view.showError(message);
 	}
 	
+	public void showStats(String filename, double fraction, int bytesPerSecond) {
+		view.showStats(filename, fraction, bytesPerSecond);
+	}
+	
 	private void requireFilename() {
 		view.showError("a file name is required");
 	}

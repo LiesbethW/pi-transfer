@@ -20,7 +20,7 @@ public class FileStats implements Observer {
 	}
 	
 	public String display() {
-		return String.format("%d%, %s", fraction()*100, speed());
+		return String.format("%s: %d%, %d B/s", filename(), fraction()*100, speed());
 	}
 	
 	@Override
@@ -43,29 +43,32 @@ public class FileStats implements Observer {
 		return totalPackets == file().numberOfParts();
 	}
 	
+	public String filename() {
+		return file().getName();
+	}
+	
 	public double fraction() {
 		return totalPackets / file().numberOfParts();
 	}
 	
-	public String speed() {
+	public int speed() {
 		long now = (new Date()).getTime();
 		long lastSecond = now - MILLISPERSECOND - (long) (now % MILLISPERSECOND);
 		if (bytesPerSecond.containsKey(lastSecond)) {
-			int bps = bytesPerSecond.get(lastSecond)*this.file().getBytesPerPart();
-			return String.format("%d B/S", bps);
+			return bytesPerSecond.get(lastSecond)*this.file().getBytesPerPart();
 		} else {
-			return "0 B/S";
+			return 0;
 		}
 	}
 	
 	public void initializeStats() {
 		System.out.println("Initializing stats");
 		totalPackets = 0;
-		packets = new boolean[totalPackets];
-		
+		packets = new boolean[file.numberOfParts()];
+		bytesPerSecond = new HashMap<Long, Integer>();
 	}
 	
-	private FileObject file() {
+	public FileObject file() {
 		return file;
 	}
 

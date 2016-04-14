@@ -73,8 +73,6 @@ public class ConnectionHandler implements Transmitter, LcpSender {
 			} else if (packet.getDestination().equals(myAddress)) {
 				short vcid = packet.getVCID();
 				if (lcpConnections.containsKey(vcid)) {
-					System.out.format("Process with id %d and in state %s received packet\n",
-							vcid, lcpConnections.get(vcid).getState().toString());
 					lcpConnections.get(vcid).digest(packet);
 				} else {
 					System.out.println("VCID " + vcid + " is not yet known, I'm starting a new connection.");

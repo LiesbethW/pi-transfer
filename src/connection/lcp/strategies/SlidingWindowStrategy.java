@@ -63,19 +63,16 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 		
 		updateEstimatedRTT(packet.getSequenceNumber(), new Date());
 		byte sequenceNumber = packet.getSequenceNumber();
-		System.out.format("Received ack %d\n", sequenceNumber);
 		byte b = seqNumToAck;
 		while (b != (byte) (sequenceNumber + 1)) {
 			if (acks.containsKey(b)) {
 				acks.put(b, true);
-				System.out.format("Set %d true\n", b);
 			}
 			b++;
 		}
 		if (sequenceNumberToFilePart.containsKey(seqNumToAck) && 
 				sequenceNumberToFilePart.get(seqNumToAck) >= connection().getFile().lastPart()) {
 			this.connection().setTransmissionCompleted();
-			System.out.println("The upload has completed.");
 			timer.cancel();
 		}
 		updateTransmittingWindow();
@@ -97,7 +94,7 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 	
 	private void sendAllFramesAgain() {
 		for (Byte sn : sequenceNumberToFilePart.keySet()) {
-			if (!acks.get(sn)) {
+			if (!acks.containsKey(sn) || !acks.get(sn)) {
 				this.sendPart(sn, sequenceNumberToFilePart.get(sn));
 			}
 		}
@@ -197,7 +194,6 @@ public class SlidingWindowStrategy extends TransmissionStrategy {
 		
 		public void run() {
 			strategy.sendAllFramesAgain();
-			System.out.println("had a timeout");
 			this.strategy.doubleEstimatedRTT();
 			this.strategy.connection().timeOut();
 		}

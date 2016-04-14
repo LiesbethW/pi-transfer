@@ -48,7 +48,7 @@ public class FileStats implements Observer {
 	}
 	
 	public double fraction() {
-		return totalPackets / file().numberOfParts();
+		return (double) totalPackets / (double) file().numberOfParts();
 	}
 	
 	public int speed() {
@@ -62,7 +62,6 @@ public class FileStats implements Observer {
 	}
 	
 	public void initializeStats() {
-		System.out.println("Initializing stats");
 		totalPackets = 0;
 		packets = new boolean[file.numberOfParts()];
 		bytesPerSecond = new HashMap<Long, Integer>();
